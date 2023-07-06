@@ -14,4 +14,4 @@ docs/
 .env
 
 # forge dependencies (submodules)
-lib/
+lib/**
