@@ -14,7 +14,7 @@ import "@eigenlayer/contracts/middleware/BLSOperatorStateRetriever.sol";
 
 import "@eigenlayer/test/mocks/EmptyContract.sol";
 
-import "../src/core/PlaygroundServiceManagerV1.sol";
+import "../src/core/PlaygroundAVSServiceManagerV1.sol";
 
 import "forge-std/Test.sol";
 
@@ -34,14 +34,14 @@ contract PlaygroundAVSDeployer is DeployOpenEigenLayer {
     PauserRegistry public playgroundAVSPauserReg;
 
     BLSPublicKeyCompendium public pubkeyCompendium;
-    PlaygroundServiceManagerV1 public playgroundServiceManagerV1;
+    PlaygroundAVSServiceManagerV1 public playgroundAVSServiceManagerV1;
     BLSRegistryCoordinatorWithIndices public registryCoordinator;
     IBLSPubkeyRegistry public blsPubkeyRegistry;
     IIndexRegistry public indexRegistry;
     IStakeRegistry public stakeRegistry;
     BLSOperatorStateRetriever public blsOperatorStateRetriever;
 
-    PlaygroundServiceManagerV1 public playgroundServiceManagerV1Implementation;
+    PlaygroundAVSServiceManagerV1 public PlaygroundAVSServiceManagerV1Implementation;
     IBLSRegistryCoordinatorWithIndices public registryCoordinatorImplementation;
     IBLSPubkeyRegistry public blsPubkeyRegistryImplementation;
     IIndexRegistry public indexRegistryImplementation;
@@ -90,7 +90,7 @@ contract PlaygroundAVSDeployer is DeployOpenEigenLayer {
          * First, deploy upgradeable proxy contracts that **will point** to the implementations. Since the implementation contracts are
          * not yet deployed, we give these proxies an empty contract as the initial implementation, to act as if they have no code.
          */
-        playgroundServiceManagerV1 = PlaygroundServiceManagerV1(
+        playgroundAVSServiceManagerV1 = PlaygroundAVSServiceManagerV1(
             address(new TransparentUpgradeableProxy(address(emptyContract), address(playgroundAVSProxyAdmin), ""))
         );
         pubkeyCompendium = new BLSPublicKeyCompendium();
@@ -112,7 +112,7 @@ contract PlaygroundAVSDeployer is DeployOpenEigenLayer {
             stakeRegistryImplementation = new StakeRegistry(
                 registryCoordinator,
                 strategyManager,
-                playgroundServiceManagerV1
+                playgroundAVSServiceManagerV1
             );
 
             // set up a quorum with each strategy that needs to be set up
@@ -139,7 +139,7 @@ contract PlaygroundAVSDeployer is DeployOpenEigenLayer {
 
         registryCoordinatorImplementation = new BLSRegistryCoordinatorWithIndices(
             slasher,
-            playgroundServiceManagerV1,
+            playgroundAVSServiceManagerV1,
             stakeRegistry,
             blsPubkeyRegistry,
             indexRegistry
@@ -185,7 +185,7 @@ contract PlaygroundAVSDeployer is DeployOpenEigenLayer {
             address(indexRegistryImplementation)
         );
 
-        playgroundServiceManagerV1Implementation = new PlaygroundServiceManagerV1(
+        PlaygroundAVSServiceManagerV1Implementation = new PlaygroundAVSServiceManagerV1(
             registryCoordinator,
             strategyManager,
             delegation,
@@ -194,10 +194,10 @@ contract PlaygroundAVSDeployer is DeployOpenEigenLayer {
 
         // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
         playgroundAVSProxyAdmin.upgradeAndCall(
-            TransparentUpgradeableProxy(payable(address(playgroundServiceManagerV1))),
-            address(playgroundServiceManagerV1Implementation),
+            TransparentUpgradeableProxy(payable(address(playgroundAVSServiceManagerV1))),
+            address(PlaygroundAVSServiceManagerV1Implementation),
             abi.encodeWithSelector(
-                PlaygroundServiceManagerV1.initialize.selector,
+                PlaygroundAVSServiceManagerV1.initialize.selector,
                 playgroundAVSPauserReg,
                 playgroundAVSCommunityMultisig,
                 0,

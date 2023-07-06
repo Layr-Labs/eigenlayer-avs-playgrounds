@@ -13,7 +13,7 @@ import "@eigenlayer/contracts/middleware/StakeRegistry.sol";
 
 import "@eigenlayer/test/mocks/EmptyContract.sol";
 
-import "../src/core/PlaygroundServiceManagerV1.sol";
+import "@playground-avs/core/PlaygroundAVSServiceManagerV1.sol";
 
 import "./PlaygroundAVSDeployer.s.sol";
 import "./EigenLayerUtils.s.sol";
@@ -167,7 +167,7 @@ contract DeployAndSetupPlaygroundAVS is PlaygroundAVSDeployer, EigenLayerUtils {
         }
 
         string memory output = "playgroundAVS deployment output";
-        vm.serializeAddress(output, "playgroundAVSServiceManager", address(playgroundServiceManagerV1));
+        vm.serializeAddress(output, "playgroundAVSServiceManager", address(playgroundAVSServiceManagerV1));
         vm.serializeAddress(output, "blsOperatorStateRetriever", address(blsOperatorStateRetriever));
 
         string memory finalJson = vm.serializeString(output, "object", output);

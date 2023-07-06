@@ -15,20 +15,20 @@ import "@eigenlayer/contracts/libraries/BytesLib.sol";
 import "@eigenlayer/contracts/libraries/Merkle.sol";
 import "@eigenlayer/contracts/permissions/Pausable.sol";
 
-import "./PlaygroundServiceManagerV1Storage.sol";
+import "./PlaygroundAVSServiceManagerV1Storage.sol";
 
 /**
- * @title Primary entrypoint for procuring services from PlaygroundServiceManagerV1.
+ * @title Primary entrypoint for procuring services from PlaygroundAVSServiceManagerV1.
  * @author Layr Labs, Inc.
  * @notice This contract is used for:
  * - initializing the data store by the disperser
  * - confirming the data store by the disperser with inferred aggregated signatures of the quorum
  * - freezing operators as the result of various "challenges"
  */
-contract PlaygroundServiceManagerV1 is
+contract PlaygroundAVSServiceManagerV1 is
     Initializable,
     OwnableUpgradeable,
-    PlaygroundServiceManagerV1Storage,
+    PlaygroundAVSServiceManagerV1Storage,
     BLSSignatureChecker,
     Pausable
 {
@@ -74,10 +74,10 @@ contract PlaygroundServiceManagerV1 is
 
     /// @notice Called in the event of challenge resolution, in order to forward a call to the Slasher, which 'freezes' the `operator`.
     function freezeOperator(address /*operator*/) external {
-        revert("PlaygroundServiceManagerV1.freezeOperator: not implemented");
+        revert("PlaygroundAVSServiceManagerV1.freezeOperator: not implemented");
         // require(
         //     msg.sender == address(???),
-        //     "PlaygroundServiceManagerV1.freezeOperator: Only ??? can slash operators"
+        //     "PlaygroundAVSServiceManagerV1.freezeOperator: Only ??? can slash operators"
         // );
         // slasher.freezeOperator(operator);
     }

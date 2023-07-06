@@ -6,14 +6,14 @@ import "@eigenlayer/contracts/interfaces/IDelegationManager.sol";
 import "@eigenlayer/contracts/interfaces/IServiceManager.sol";
 import "@eigenlayer/contracts/interfaces/IStrategyManager.sol";
 
-import "../interfaces/IPlaygroundServiceManagerV1.sol";
+import "../interfaces/IPlaygroundAVSServiceManagerV1.sol";
 
 /**
- * @title Storage variables for the `PlaygroundServiceManagerV1` contract.
+ * @title Storage variables for the `PlaygroundAVSServiceManagerV1` contract.
  * @author Layr Labs, Inc.
  * @notice This storage contract is separate from the logic to simplify the upgrade process.
  */
-abstract contract PlaygroundServiceManagerV1Storage is IPlaygroundServiceManagerV1 {
+abstract contract PlaygroundAVSServiceManagerV1Storage is IPlaygroundAVSServiceManagerV1 {
     // CONSTANTS
 
     /// @notice Unit of measure (in blocks) for which data will be stored for after confirmation.

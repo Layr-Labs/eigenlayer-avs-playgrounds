@@ -9,7 +9,7 @@ import "@eigenlayer/contracts/middleware/BLSSignatureChecker.sol";
 import "@eigenlayer/contracts/interfaces/IDelegationManager.sol";
 import "@eigenlayer/contracts/interfaces/IPaymentManager.sol";
 
-interface IPlaygroundServiceManagerV1 is IServiceManager, IDelayedService {
+interface IPlaygroundAVSServiceManagerV1 is IServiceManager, IDelayedService {
 
     // EVENTS
 
