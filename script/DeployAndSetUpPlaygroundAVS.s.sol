@@ -29,9 +29,9 @@ import "forge-std/StdJson.sol";
 // source .env
 
 // # To deploy and verify our contract
-// forge script script/SetUpPlaygroundAVS.s.sol:SetupPlaygroundAVS --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
+// forge script script/DeployAndSetUpPlaygroundAVS.s.sol:DeployAndSetupPlaygroundAVS --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
 
-contract SetupPlaygroundAVS is PlaygroundAVSDeployer, EigenLayerUtils {
+contract DeployAndSetupPlaygroundAVS is PlaygroundAVSDeployer, EigenLayerUtils {
 
     string _deployConfigPath = "script/playgroundAVS_deploy_config.json";
 
