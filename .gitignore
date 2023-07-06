@@ -12,3 +12,6 @@ docs/
 
 # Dotenv file
 .env
+
+# forge dependencies (submodules)
+lib/
