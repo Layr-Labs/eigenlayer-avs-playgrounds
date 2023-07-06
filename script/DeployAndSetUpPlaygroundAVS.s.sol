@@ -32,18 +32,16 @@ import "forge-std/StdJson.sol";
 // forge script script/DeployAndSetUpPlaygroundAVS.s.sol:DeployAndSetupPlaygroundAVS --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
 
 contract DeployAndSetupPlaygroundAVS is PlaygroundAVSDeployer, EigenLayerUtils {
-
     string _deployConfigPath = "script/playgroundAVS_deploy_config.json";
 
     // deploy all the playgroundAVS contracts. Relies on many EL contracts having already been deployed.
     function run() external {
-        
-
         // READ JSON CONFIG DATA
         string memory configData = vm.readFile(_deployConfigPath);
 
-        
-        uint8 numStrategies = uint8(stdJson.readUint(configData, ".numStrategies"));
+        uint8 numStrategies = uint8(
+            stdJson.readUint(configData, ".numStrategies")
+        );
         {
             address eigenLayerCommunityMultisig = msg.sender;
             address eigenLayerOperationsMultisig = msg.sender;
@@ -55,17 +53,31 @@ contract DeployAndSetupPlaygroundAVS is PlaygroundAVSDeployer, EigenLayerUtils {
             address tokenOwner = msg.sender;
             // bytes memory parsedData = vm.parseJson(configData);
             bool useDefaults = stdJson.readBool(configData, ".useDefaults");
-            if(!useDefaults) {
-                eigenLayerCommunityMultisig = stdJson.readAddress(configData, ".eigenLayerCommunityMultisig");
-                eigenLayerOperationsMultisig = stdJson.readAddress(configData, ".eigenLayerOperationsMultisig");
-                eigenLayerPauserMultisig = stdJson.readAddress(configData, ".eigenLayerPauserMultisig");
-                playgroundAVSCommunityMultisig = stdJson.readAddress(configData, ".playgroundAVSCommunityMultisig");
-                playgroundAVSPauser = stdJson.readAddress(configData, ".playgroundAVSPauser");
+            if (!useDefaults) {
+                eigenLayerCommunityMultisig = stdJson.readAddress(
+                    configData,
+                    ".eigenLayerCommunityMultisig"
+                );
+                eigenLayerOperationsMultisig = stdJson.readAddress(
+                    configData,
+                    ".eigenLayerOperationsMultisig"
+                );
+                eigenLayerPauserMultisig = stdJson.readAddress(
+                    configData,
+                    ".eigenLayerPauserMultisig"
+                );
+                playgroundAVSCommunityMultisig = stdJson.readAddress(
+                    configData,
+                    ".playgroundAVSCommunityMultisig"
+                );
+                playgroundAVSPauser = stdJson.readAddress(
+                    configData,
+                    ".playgroundAVSPauser"
+                );
 
                 initialSupply = stdJson.readUint(configData, ".initialSupply");
                 tokenOwner = stdJson.readAddress(configData, ".tokenOwner");
             }
-
 
             vm.startBroadcast();
 
@@ -83,7 +95,10 @@ contract DeployAndSetupPlaygroundAVS is PlaygroundAVSDeployer, EigenLayerUtils {
             vm.stopBroadcast();
         }
 
-        uint256[] memory stakerPrivateKeys = stdJson.readUintArray(configData, ".stakerPrivateKeys");
+        uint256[] memory stakerPrivateKeys = stdJson.readUintArray(
+            configData,
+            ".stakerPrivateKeys"
+        );
         address[] memory stakers = new address[](stakerPrivateKeys.length);
         for (uint i = 0; i < stakers.length; i++) {
             stakers[i] = vm.addr(stakerPrivateKeys[i]);
@@ -95,10 +110,19 @@ contract DeployAndSetupPlaygroundAVS is PlaygroundAVSDeployer, EigenLayerUtils {
         }
 
         // stakerTokenAmount[i][j] is the amount of token i that staker j will receive
-        bytes memory stakerTokenAmountsRaw = stdJson.parseRaw(configData, ".stakerTokenAmounts");
-        uint256[][] memory stakerTokenAmounts = abi.decode(stakerTokenAmountsRaw, (uint256[][]));
+        bytes memory stakerTokenAmountsRaw = stdJson.parseRaw(
+            configData,
+            ".stakerTokenAmounts"
+        );
+        uint256[][] memory stakerTokenAmounts = abi.decode(
+            stakerTokenAmountsRaw,
+            (uint256[][])
+        );
 
-        uint256[] memory operatorPrivateKeys = stdJson.readUintArray(configData, ".operatorPrivateKeys");
+        uint256[] memory operatorPrivateKeys = stdJson.readUintArray(
+            configData,
+            ".operatorPrivateKeys"
+        );
         address[] memory operators = new address[](operatorPrivateKeys.length);
         for (uint i = 0; i < operators.length; i++) {
             operators[i] = vm.addr(operatorPrivateKeys[i]);
@@ -112,17 +136,9 @@ contract DeployAndSetupPlaygroundAVS is PlaygroundAVSDeployer, EigenLayerUtils {
         vm.startBroadcast();
 
         // Allocate eth to stakers and operators
-        _allocate(
-            IERC20(address(0)),
-            stakers,
-            stakerETHAmounts
-        );
+        _allocate(IERC20(address(0)), stakers, stakerETHAmounts);
 
-        _allocate(
-            IERC20(address(0)),
-            operators,
-            operatorETHAmounts
-        );
+        _allocate(IERC20(address(0)), operators, operatorETHAmounts);
 
         // Allocate tokens to stakers
         for (uint8 i = 0; i < numStrategies; i++) {
@@ -153,8 +169,11 @@ contract DeployAndSetupPlaygroundAVS is PlaygroundAVSDeployer, EigenLayerUtils {
         for (uint256 i = 0; i < stakerPrivateKeys.length; i++) {
             vm.startBroadcast(stakerPrivateKeys[i]);
             for (uint j = 0; j < numStrategies; j++) {
-                if(stakerTokenAmounts[j][i] > 0) {
-                    deployedStrategyArray[j].underlyingToken().approve(address(strategyManager), stakerTokenAmounts[j][i]);
+                if (stakerTokenAmounts[j][i] > 0) {
+                    deployedStrategyArray[j].underlyingToken().approve(
+                        address(strategyManager),
+                        stakerTokenAmounts[j][i]
+                    );
                     strategyManager.depositIntoStrategy(
                         deployedStrategyArray[j],
                         deployedStrategyArray[j].underlyingToken(),
@@ -167,11 +186,34 @@ contract DeployAndSetupPlaygroundAVS is PlaygroundAVSDeployer, EigenLayerUtils {
         }
 
         string memory output = "playgroundAVS deployment output";
-        vm.serializeAddress(output, "playgroundAVSServiceManager", address(playgroundAVSServiceManagerV1));
-        vm.serializeAddress(output, "blsOperatorStateRetriever", address(blsOperatorStateRetriever));
+        vm.serializeAddress(
+            output,
+            "playgroundAVSServiceManager",
+            address(playgroundAVSServiceManagerV1)
+        );
+        vm.serializeAddress(
+            output,
+            "blsOperatorStateRetriever",
+            address(blsOperatorStateRetriever)
+        );
+        for (uint8 i = 0; i < numStrategies; i++) {
+            vm.serializeAddress(
+                output,
+                string.concat("strat", vm.toString(i)),
+                address(deployedStrategyArray[i])
+            );
+            vm.serializeAddress(
+                output,
+                string.concat("underlyingToken", vm.toString(i)),
+                address(deployedStrategyArray[i].underlyingToken())
+            );
+        }
 
         string memory finalJson = vm.serializeString(output, "object", output);
 
-        vm.writeJson(finalJson, "./script/output/playgroundAVS_deploy_output.json");        
+        vm.writeJson(
+            finalJson,
+            "./script/output/playgroundAVS_deploy_output.json"
+        );
     }
 }

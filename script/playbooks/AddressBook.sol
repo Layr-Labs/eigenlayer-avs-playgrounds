@@ -15,29 +15,29 @@ import "forge-std/Test.sol";
 import "forge-std/Script.sol";
 import "forge-std/StdJson.sol";
 
-contract ContractsAddressBook is Script, DSTest {
+contract AddressBook is Script, DSTest {
     Vm cheats = Vm(HEVM_ADDRESS);
 
-    string _deployOutputPath = "script/output/playgroundAVS_deploy_output.json";
-    string deployOutputData = vm.readFile(_deployOutputPath);
+    struct Contracts {
+        Eigenlayer eigenlayer;
+        PlaygroundAVS playgroundAVS;
+    }
+    struct Eigenlayer {
+        IDelegationManager delegationManager;
+        IStrategyManager strategyManager;
+        ISlasher slasher;
+        StrategyBase dummyTokenStrat;
+    }
+    struct PlaygroundAVS {
+        PlaygroundAVSServiceManagerV1 serviceManager;
+        // TODO: add registry contracts
+    }
 
-    PlaygroundAVSServiceManagerV1 playgroundAVSServiceManager =
-        PlaygroundAVSServiceManagerV1(
-            stdJson.readAddress(
-                deployOutputData,
-                ".playgroundAVSServiceManager"
-            )
-        );
-    IDelegationManager delegationManager = playgroundAVSServiceManager.delegationManager();
-    StrategyManager public strategyManager;
-    IERC20 public weth;
-    StrategyBase public wethStrat;
-    IERC20 public eigen;
-    StrategyBase public eigenStrat;
-
-    uint256[] memory operatorPrivateKeys = stdJson.readUintArray(configData, ".operatorPrivateKeys");
-    address[] memory operators = new address[](operatorPrivateKeys.length);
-    for (uint i = 0; i < operators.length; i++) {
-        operators[i] = vm.addr(operatorPrivateKeys[i]);
+    function getContracts(address playgroundAVSServiceManagerV1, address dummyTokenStrat) internal view returns (Contracts memory contracts) {
+        contracts.playgroundAVS.serviceManager = PlaygroundAVSServiceManagerV1(playgroundAVSServiceManagerV1);
+        contracts.eigenlayer.delegationManager = contracts.playgroundAVS.serviceManager.delegationManager();
+        contracts.eigenlayer.strategyManager = contracts.playgroundAVS.serviceManager.strategyManager();
+        contracts.eigenlayer.slasher = contracts.playgroundAVS.serviceManager.slasher();
+        contracts.eigenlayer.dummyTokenStrat = StrategyBase(dummyTokenStrat);
     }
 }
