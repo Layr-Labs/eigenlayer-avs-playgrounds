@@ -7,8 +7,8 @@ fs_permissions = [{ access = "read-write", path = "./"}]
 remappings = [
     "@eigenlayer/=lib/eigenlayer-contracts/src/",
     "@eigenlayer-scripts/=lib/eigenlayer-contracts/script/",
-    "@openzeppelin/=lib/openzeppelin-contracts/",
-    "@openzeppelin-upgrades/=lib/openzeppelin-contracts-upgradeable/",
+    "@openzeppelin/=lib/eigenlayer-contracts/lib/openzeppelin-contracts/",
+    "@openzeppelin-upgrades/=lib/eigenlayer-contracts/lib/openzeppelin-contracts-upgradeable/",
     "forge-std/=lib/forge-std/src/"
 ]
 

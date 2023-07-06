@@ -13,8 +13,7 @@ import "@eigenlayer/contracts/middleware/StakeRegistry.sol";
 
 import "@eigenlayer/test/mocks/EmptyContract.sol";
 
-import "../src/core/EigenDAServiceManager.sol";
-import "../src/libraries/EigenDAHasher.sol";
+import "../src/core/PlaygroundServiceManagerV1.sol";
 
 import "./EigenDADeployer.s.sol";
 import "./EigenLayerUtils.s.sol";
@@ -34,17 +33,17 @@ import "forge-std/StdJson.sol";
 
 contract SetupEigenDA is EigenDADeployer, EigenLayerUtils {
 
-    string deployConfigPath = "script/eigenda_deploy_config.json";
+    string _deployConfigPath = "script/eigenda_deploy_config.json";
 
     // deploy all the EigenDA contracts. Relies on many EL contracts having already been deployed.
     function run() external {
         
 
         // READ JSON CONFIG DATA
-        string memory config_data = vm.readFile(deployConfigPath);
+        string memory configData = vm.readFile(deployConfigPath);
 
         
-        uint8 numStrategies = uint8(stdJson.readUint(config_data, ".numStrategies"));
+        uint8 numStrategies = uint8(stdJson.readUint(configData, ".numStrategies"));
         {
             address eigenLayerCommunityMultisig = msg.sender;
             address eigenLayerOperationsMultisig = msg.sender;
@@ -54,17 +53,17 @@ contract SetupEigenDA is EigenDADeployer, EigenLayerUtils {
 
             uint256 initialSupply = 1000 ether;
             address tokenOwner = msg.sender;
-            // bytes memory parsedData = vm.parseJson(config_data);
-            bool useDefaults = stdJson.readBool(config_data, ".useDefaults");
+            // bytes memory parsedData = vm.parseJson(configData);
+            bool useDefaults = stdJson.readBool(configData, ".useDefaults");
             if(!useDefaults) {
-                eigenLayerCommunityMultisig = stdJson.readAddress(config_data, ".eigenLayerCommunityMultisig");
-                eigenLayerOperationsMultisig = stdJson.readAddress(config_data, ".eigenLayerOperationsMultisig");
-                eigenLayerPauserMultisig = stdJson.readAddress(config_data, ".eigenLayerPauserMultisig");
-                eigenDACommunityMultisig = stdJson.readAddress(config_data, ".eigenDACommunityMultisig");
-                eigenDAPauser = stdJson.readAddress(config_data, ".eigenDAPauser");
+                eigenLayerCommunityMultisig = stdJson.readAddress(configData, ".eigenLayerCommunityMultisig");
+                eigenLayerOperationsMultisig = stdJson.readAddress(configData, ".eigenLayerOperationsMultisig");
+                eigenLayerPauserMultisig = stdJson.readAddress(configData, ".eigenLayerPauserMultisig");
+                eigenDACommunityMultisig = stdJson.readAddress(configData, ".eigenDACommunityMultisig");
+                eigenDAPauser = stdJson.readAddress(configData, ".eigenDAPauser");
 
-                initialSupply = stdJson.readUint(config_data, ".initialSupply");
-                tokenOwner = stdJson.readAddress(config_data, ".tokenOwner");
+                initialSupply = stdJson.readUint(configData, ".initialSupply");
+                tokenOwner = stdJson.readAddress(configData, ".tokenOwner");
             }
 
 
@@ -84,7 +83,7 @@ contract SetupEigenDA is EigenDADeployer, EigenLayerUtils {
             vm.stopBroadcast();
         }
 
-        uint256[] memory stakerPrivateKeys = stdJson.readUintArray(config_data, ".stakerPrivateKeys");
+        uint256[] memory stakerPrivateKeys = stdJson.readUintArray(configData, ".stakerPrivateKeys");
         address[] memory stakers = new address[](stakerPrivateKeys.length);
         for (uint i = 0; i < stakers.length; i++) {
             stakers[i] = vm.addr(stakerPrivateKeys[i]);
@@ -96,10 +95,10 @@ contract SetupEigenDA is EigenDADeployer, EigenLayerUtils {
         }
 
         // stakerTokenAmount[i][j] is the amount of token i that staker j will receive
-        bytes memory stakerTokenAmountsRaw = stdJson.parseRaw(config_data, ".stakerTokenAmounts");
+        bytes memory stakerTokenAmountsRaw = stdJson.parseRaw(configData, ".stakerTokenAmounts");
         uint256[][] memory stakerTokenAmounts = abi.decode(stakerTokenAmountsRaw, (uint256[][]));
 
-        uint256[] memory operatorPrivateKeys = stdJson.readUintArray(config_data, ".operatorPrivateKeys");
+        uint256[] memory operatorPrivateKeys = stdJson.readUintArray(configData, ".operatorPrivateKeys");
         address[] memory operators = new address[](operatorPrivateKeys.length);
         for (uint i = 0; i < operators.length; i++) {
             operators[i] = vm.addr(operatorPrivateKeys[i]);

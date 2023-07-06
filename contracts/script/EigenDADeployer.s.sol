@@ -14,8 +14,7 @@ import "@eigenlayer/contracts/middleware/BLSOperatorStateRetriever.sol";
 
 import "@eigenlayer/test/mocks/EmptyContract.sol";
 
-import "../src/core/EigenDAServiceManager.sol";
-import "../src/libraries/EigenDAHasher.sol";
+import "../src/core/PlaygroundServiceManagerV1.sol";
 
 import "forge-std/Test.sol";
 
