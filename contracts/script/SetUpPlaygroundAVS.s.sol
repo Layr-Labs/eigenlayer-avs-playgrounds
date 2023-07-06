@@ -15,7 +15,7 @@ import "@eigenlayer/test/mocks/EmptyContract.sol";
 
 import "../src/core/PlaygroundServiceManagerV1.sol";
 
-import "./EigenDADeployer.s.sol";
+import "./PlaygroundAVSDeployer.s.sol";
 import "./EigenLayerUtils.s.sol";
 
 import "forge-std/Test.sol";
@@ -29,18 +29,18 @@ import "forge-std/StdJson.sol";
 // source .env
 
 // # To deploy and verify our contract
-// forge script script/SetUpEigenDA.s.sol:SetupEigenDA --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
+// forge script script/SetUpPlaygroundAVS.s.sol:SetupPlaygroundAVS --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
 
-contract SetupEigenDA is EigenDADeployer, EigenLayerUtils {
+contract SetupPlaygroundAVS is PlaygroundAVSDeployer, EigenLayerUtils {
 
-    string _deployConfigPath = "script/eigenda_deploy_config.json";
+    string _deployConfigPath = "script/playgroundAVS_deploy_config.json";
 
-    // deploy all the EigenDA contracts. Relies on many EL contracts having already been deployed.
+    // deploy all the playgroundAVS contracts. Relies on many EL contracts having already been deployed.
     function run() external {
         
 
         // READ JSON CONFIG DATA
-        string memory configData = vm.readFile(deployConfigPath);
+        string memory configData = vm.readFile(_deployConfigPath);
 
         
         uint8 numStrategies = uint8(stdJson.readUint(configData, ".numStrategies"));
@@ -48,8 +48,8 @@ contract SetupEigenDA is EigenDADeployer, EigenLayerUtils {
             address eigenLayerCommunityMultisig = msg.sender;
             address eigenLayerOperationsMultisig = msg.sender;
             address eigenLayerPauserMultisig = msg.sender;
-            address eigenDACommunityMultisig = msg.sender;
-            address eigenDAPauser = msg.sender;
+            address playgroundAVSCommunityMultisig = msg.sender;
+            address playgroundAVSPauser = msg.sender;
 
             uint256 initialSupply = 1000 ether;
             address tokenOwner = msg.sender;
@@ -59,8 +59,8 @@ contract SetupEigenDA is EigenDADeployer, EigenLayerUtils {
                 eigenLayerCommunityMultisig = stdJson.readAddress(configData, ".eigenLayerCommunityMultisig");
                 eigenLayerOperationsMultisig = stdJson.readAddress(configData, ".eigenLayerOperationsMultisig");
                 eigenLayerPauserMultisig = stdJson.readAddress(configData, ".eigenLayerPauserMultisig");
-                eigenDACommunityMultisig = stdJson.readAddress(configData, ".eigenDACommunityMultisig");
-                eigenDAPauser = stdJson.readAddress(configData, ".eigenDAPauser");
+                playgroundAVSCommunityMultisig = stdJson.readAddress(configData, ".playgroundAVSCommunityMultisig");
+                playgroundAVSPauser = stdJson.readAddress(configData, ".playgroundAVSPauser");
 
                 initialSupply = stdJson.readUint(configData, ".initialSupply");
                 tokenOwner = stdJson.readAddress(configData, ".tokenOwner");
@@ -69,12 +69,12 @@ contract SetupEigenDA is EigenDADeployer, EigenLayerUtils {
 
             vm.startBroadcast();
 
-            _deployEigenDAAndEigenLayerContracts(
+            _deployPlaygroundAVSAndEigenLayerContracts(
                 eigenLayerCommunityMultisig,
                 eigenLayerOperationsMultisig,
                 eigenLayerPauserMultisig,
-                eigenDACommunityMultisig,
-                eigenDAPauser,
+                playgroundAVSCommunityMultisig,
+                playgroundAVSPauser,
                 numStrategies,
                 initialSupply,
                 tokenOwner
@@ -166,12 +166,12 @@ contract SetupEigenDA is EigenDADeployer, EigenLayerUtils {
             vm.stopBroadcast();
         }
 
-        string memory output = "eigenDA deployment output";
-        vm.serializeAddress(output, "eigenDAServiceManager", address(eigenDAServiceManager));
+        string memory output = "playgroundAVS deployment output";
+        vm.serializeAddress(output, "playgroundAVSServiceManager", address(playgroundServiceManagerV1));
         vm.serializeAddress(output, "blsOperatorStateRetriever", address(blsOperatorStateRetriever));
 
         string memory finalJson = vm.serializeString(output, "object", output);
 
-        vm.writeJson(finalJson, "./script/output/eigenda_deploy_output.json");        
+        vm.writeJson(finalJson, "./script/output/playgroundAVS_deploy_output.json");        
     }
 }

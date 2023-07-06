@@ -27,32 +27,32 @@ import "forge-std/StdJson.sol";
 // source .env
 
 // # To deploy and verify our contract
-// forge script script/Deployer.s.sol:EigenDADeployer --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
-contract EigenDADeployer is DeployOpenEigenLayer {
-    // EigenDA contracts
-    ProxyAdmin public eigenDAProxyAdmin;
-    PauserRegistry public eigenDAPauserReg;
+// forge script script/PlaygroundAVSDeployer.s.sol:PlaygroundAVSDeployer --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
+contract PlaygroundAVSDeployer is DeployOpenEigenLayer {
+    // PlaygroundAVS contracts
+    ProxyAdmin public playgroundAVSProxyAdmin;
+    PauserRegistry public playgroundAVSPauserReg;
 
     BLSPublicKeyCompendium public pubkeyCompendium;
-    EigenDAServiceManager public eigenDAServiceManager;
+    PlaygroundServiceManagerV1 public playgroundServiceManagerV1;
     BLSRegistryCoordinatorWithIndices public registryCoordinator;
     IBLSPubkeyRegistry public blsPubkeyRegistry;
     IIndexRegistry public indexRegistry;
     IStakeRegistry public stakeRegistry;
     BLSOperatorStateRetriever public blsOperatorStateRetriever;
 
-    EigenDAServiceManager public eigenDAServiceManagerImplementation;
+    PlaygroundServiceManagerV1 public playgroundServiceManagerV1Implementation;
     IBLSRegistryCoordinatorWithIndices public registryCoordinatorImplementation;
     IBLSPubkeyRegistry public blsPubkeyRegistryImplementation;
     IIndexRegistry public indexRegistryImplementation;
     IStakeRegistry public stakeRegistryImplementation;
     
-    function _deployEigenDAAndEigenLayerContracts(
+    function _deployPlaygroundAVSAndEigenLayerContracts(
         address eigenLayerCommunityMultisig,
         address eigenLayerOperationsMultisig,
         address eigenLayerPauserMultisig,
-        address eigenDACommunityMultisig,
-        address eigenDAPauser,
+        address playgroundAVSCommunityMultisig,
+        address playgroundAVSPauser,
         uint8 numStrategies,
         uint256 initialSupply,
         address tokenOwner
@@ -72,14 +72,14 @@ contract EigenDADeployer is DeployOpenEigenLayer {
         _deployEigenLayer(eigenLayerCommunityMultisig, eigenLayerOperationsMultisig, eigenLayerPauserMultisig, strategyConfigs);
 
         // deploy proxy admin for ability to upgrade proxy contracts
-        eigenDAProxyAdmin = new ProxyAdmin();
+        playgroundAVSProxyAdmin = new ProxyAdmin();
 
         // deploy pauser registry
         {
             address[] memory pausers = new address[](2);
-            pausers[0] = eigenDAPauser;
-            pausers[1] = eigenDACommunityMultisig;
-            eigenDAPauserReg = new PauserRegistry(pausers, eigenDACommunityMultisig);
+            pausers[0] = playgroundAVSPauser;
+            pausers[1] = playgroundAVSCommunityMultisig;
+            playgroundAVSPauserReg = new PauserRegistry(pausers, playgroundAVSCommunityMultisig);
         }
 
         emptyContract = new EmptyContract();
@@ -90,21 +90,21 @@ contract EigenDADeployer is DeployOpenEigenLayer {
          * First, deploy upgradeable proxy contracts that **will point** to the implementations. Since the implementation contracts are
          * not yet deployed, we give these proxies an empty contract as the initial implementation, to act as if they have no code.
          */
-        eigenDAServiceManager = EigenDAServiceManager(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(eigenDAProxyAdmin), ""))
+        playgroundServiceManagerV1 = PlaygroundServiceManagerV1(
+            address(new TransparentUpgradeableProxy(address(emptyContract), address(playgroundAVSProxyAdmin), ""))
         );
         pubkeyCompendium = new BLSPublicKeyCompendium();
         registryCoordinator = BLSRegistryCoordinatorWithIndices(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(eigenDAProxyAdmin), ""))
+            address(new TransparentUpgradeableProxy(address(emptyContract), address(playgroundAVSProxyAdmin), ""))
         );
         blsPubkeyRegistry = IBLSPubkeyRegistry(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(eigenDAProxyAdmin), ""))
+            address(new TransparentUpgradeableProxy(address(emptyContract), address(playgroundAVSProxyAdmin), ""))
         );
         indexRegistry = IIndexRegistry(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(eigenDAProxyAdmin), ""))
+            address(new TransparentUpgradeableProxy(address(emptyContract), address(playgroundAVSProxyAdmin), ""))
         );
         stakeRegistry = IStakeRegistry(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(eigenDAProxyAdmin), ""))
+            address(new TransparentUpgradeableProxy(address(emptyContract), address(playgroundAVSProxyAdmin), ""))
         );
 
         // Second, deploy the *implementation* contracts, using the *proxy contracts* as inputs
@@ -112,7 +112,7 @@ contract EigenDADeployer is DeployOpenEigenLayer {
             stakeRegistryImplementation = new StakeRegistry(
                 registryCoordinator,
                 strategyManager,
-                eigenDAServiceManager
+                playgroundServiceManagerV1
             );
 
             // set up a quorum with each strategy that needs to be set up
@@ -126,7 +126,7 @@ contract EigenDADeployer is DeployOpenEigenLayer {
                 });
             }
 
-            eigenDAProxyAdmin.upgradeAndCall(
+            playgroundAVSProxyAdmin.upgradeAndCall(
                 TransparentUpgradeableProxy(payable(address(stakeRegistry))),
                 address(stakeRegistryImplementation),
                 abi.encodeWithSelector(
@@ -139,7 +139,7 @@ contract EigenDADeployer is DeployOpenEigenLayer {
 
         registryCoordinatorImplementation = new BLSRegistryCoordinatorWithIndices(
             slasher,
-            eigenDAServiceManager,
+            playgroundServiceManagerV1,
             stakeRegistry,
             blsPubkeyRegistry,
             indexRegistry
@@ -156,7 +156,7 @@ contract EigenDADeployer is DeployOpenEigenLayer {
                     kickBIPsOfTotalStake: 100
                 });
             }
-            eigenDAProxyAdmin.upgradeAndCall(
+            playgroundAVSProxyAdmin.upgradeAndCall(
                 TransparentUpgradeableProxy(payable(address(registryCoordinator))),
                 address(registryCoordinatorImplementation),
                 abi.encodeWithSelector(
@@ -171,7 +171,7 @@ contract EigenDADeployer is DeployOpenEigenLayer {
             pubkeyCompendium
         );
 
-        eigenDAProxyAdmin.upgrade(
+        playgroundAVSProxyAdmin.upgrade(
             TransparentUpgradeableProxy(payable(address(blsPubkeyRegistry))),
             address(blsPubkeyRegistryImplementation)
         );
@@ -180,29 +180,28 @@ contract EigenDADeployer is DeployOpenEigenLayer {
             registryCoordinator
         );
 
-        eigenDAProxyAdmin.upgrade(
+        playgroundAVSProxyAdmin.upgrade(
             TransparentUpgradeableProxy(payable(address(indexRegistry))),
             address(indexRegistryImplementation)
         );
 
-        eigenDAServiceManagerImplementation = new EigenDAServiceManager(
+        playgroundServiceManagerV1Implementation = new PlaygroundServiceManagerV1(
             registryCoordinator,
             strategyManager,
             delegation,
-            slasher,
-            IPaymentManager(address(0))
+            slasher
         );
 
         // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
-        eigenDAProxyAdmin.upgradeAndCall(
-            TransparentUpgradeableProxy(payable(address(eigenDAServiceManager))),
-            address(eigenDAServiceManagerImplementation),
+        playgroundAVSProxyAdmin.upgradeAndCall(
+            TransparentUpgradeableProxy(payable(address(playgroundServiceManagerV1))),
+            address(playgroundServiceManagerV1Implementation),
             abi.encodeWithSelector(
-                EigenDAServiceManager.initialize.selector,
-                eigenDAPauserReg,
-                eigenDACommunityMultisig,
+                PlaygroundServiceManagerV1.initialize.selector,
+                playgroundAVSPauserReg,
+                playgroundAVSCommunityMultisig,
                 0,
-                eigenDACommunityMultisig
+                playgroundAVSCommunityMultisig
             )
         );
 

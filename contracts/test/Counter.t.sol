@@ -1,24 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.12;
 
 import "forge-std/Test.sol";
-import "../src/Counter.sol";
+import "../src/core/PlaygroundServiceManagerV1.sol";
 
 contract CounterTest is Test {
-    Counter public counter;
+    PlaygroundServiceManagerV1 public playgroundAVS;
 
     function setUp() public {
-        counter = new Counter();
-        counter.setNumber(0);
+        // TODO
+        // playgroundAVS = new PlaygroundServiceManagerV1();
     }
 
-    function testIncrement() public {
-        counter.increment();
-        assertEq(counter.number(), 1);
-    }
-
-    function testSetNumber(uint256 x) public {
-        counter.setNumber(x);
-        assertEq(counter.number(), x);
+    function testDummyFunction() public {
+        playgroundAVS.dummyFunction();
     }
 }

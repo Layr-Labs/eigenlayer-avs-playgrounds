@@ -13,11 +13,10 @@ import "@eigenlayer/contracts/middleware/StakeRegistry.sol";
 
 import "@eigenlayer/test/mocks/EmptyContract.sol";
 
-import "../src/core/EigenDAServiceManager.sol";
-import "../src/libraries/EigenDAHasher.sol";
+import "../../src/core/PlaygroundServiceManagerV1.sol";
 
-import "./EigenDADeployer.s.sol";
-import "./EigenLayerUtils.s.sol";
+import "../PlaygroundAVSDeployer.s.sol";
+import "../EigenLayerUtils.s.sol";
 
 import "forge-std/Test.sol";
 
@@ -30,21 +29,16 @@ import "forge-std/StdJson.sol";
 // source .env
 
 // # To deploy and verify our contract
-// forge script script/SetUpEigenDA.s.sol:SetupEigenDA --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
+// forge script script/playbooks/scratch.s.sol:Scratch --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
+contract Scratch is PlaygroundAVSDeployer, EigenLayerUtils {
 
-contract Scratch is EigenDADeployer, EigenLayerUtils {
+    string deployConfigPath = "script/playgroundAVS_deploy_config.json";
 
-    string deployConfigPath = "script/eigenda_deploy_config.json";
-
-    // deploy all the EigenDA contracts. Relies on many EL contracts having already been deployed.
+    // deploy all the playgroundAVS contracts. Relies on many EL contracts having already been deployed.
     function run() external {
         
-
         // READ JSON CONFIG DATA
         string memory config_data = vm.readFile(deployConfigPath);
-
- 
-
 
         uint256[] memory stakerPrivateKeys = stdJson.readUintArray(config_data, ".stakerPrivateKeys");
         address[] memory stakers = new address[](stakerPrivateKeys.length);
