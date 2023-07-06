@@ -16,7 +16,7 @@ import "@eigenlayer/test/mocks/EmptyContract.sol";
 import "@playground-avs/core/PlaygroundAVSServiceManagerV1.sol";
 
 import "./PlaygroundAVSDeployer.s.sol";
-import "./EigenLayerUtils.s.sol";
+import "./utils/Utils.s.sol";
 
 import "forge-std/Test.sol";
 
@@ -30,8 +30,7 @@ import "forge-std/StdJson.sol";
 
 // # To deploy and verify our contract
 // forge script script/DeployAndSetUpPlaygroundAVS.s.sol:DeployAndSetupPlaygroundAVS --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
-
-contract DeployAndSetupPlaygroundAVS is PlaygroundAVSDeployer, EigenLayerUtils {
+contract DeployAndSetupPlaygroundAVS is PlaygroundAVSDeployer, Utils {
     string _deployConfigPath = "script/playgroundAVS_deploy_config.json";
 
     // deploy all the playgroundAVS contracts. Relies on many EL contracts having already been deployed.
