@@ -1,0 +1,20 @@
+{
+    "useDefaults": true,
+    "numStrategies": 2,
+    "stakerPrivateKeys": [
+        "1",
+        "2",
+        "3",
+        "4"
+    ],
+    "stakerTokenAmounts": [
+        ["100", "100", "100", "100"],
+        ["100", "100", "100", "100"]
+    ],
+    "operatorPrivateKeys": [
+        "1001",
+        "1002",
+        "1003",
+        "1004"
+    ]
+}
