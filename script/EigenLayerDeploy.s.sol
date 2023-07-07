@@ -35,7 +35,7 @@ import "forge-std/Test.sol";
 // source .env
 
 // # To deploy and verify our contract
-// forge script script/M1_Deploy.s.sol:Deployer_M1 --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
+// forge script script/EigenLayerDeploy.s.sol --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
 contract EigenLayerDeploy is Script, Test {
     Vm cheats = Vm(HEVM_ADDRESS);
 
