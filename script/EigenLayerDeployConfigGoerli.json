@@ -18,7 +18,8 @@
          },
     "eigenPodManager":
          {
-              "init_paused_status": 30
+              "init_paused_status": 30,
+              "max_pods": 0
          },
     "delayedWithdrawalRouter":
          {

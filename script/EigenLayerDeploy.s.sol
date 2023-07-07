@@ -47,7 +47,7 @@ contract EigenLayerDeploy is Script, Test {
         string tokenSymbol;
     }
 
-    string public deployConfigPath = string(bytes("script/M1_deploy.config.json"));
+    string public deployConfigPath = string(bytes("script/EigenLayerDeployConfigGoerli.json"));
 
     // EigenLayer Contracts
     ProxyAdmin public eigenLayerProxyAdmin;
@@ -243,15 +243,32 @@ contract EigenLayerDeploy is Script, Test {
 
         IERC20 mockToken = new ERC20Mock();
 
+        // baseStrategy = StrategyBase(
+        //     address(new TransparentUpgradeableProxy(address(emptyContract), address(eigenLayerProxyAdmin), ""))
+        // );
+
         // deploy StrategyBaseTVLLimits contract implementation
         baseStrategyImplementation = new StrategyBase(strategyManager);
         // create upgradeable proxies that each point to the implementation and initialize them
+
+        // eigenLayerProxyAdmin.upgradeAndCall(
+        //     TransparentUpgradeableProxy(payable(address(baseStrategy))),
+        //     address(baseStrategyImplementation),
+        //     abi.encodeWithSelector(
+        //         EigenPodManager.initialize.selector,
+        //         EIGENPOD_MANAGER_MAX_PODS,
+        //         IBeaconChainOracle(address(0)),
+        //         executorMultisig,
+        //         eigenLayerPauserReg,
+        //         EIGENPOD_MANAGER_INIT_PAUSED_STATUS
+        //     )
+        // );
 
         baseStrategy = StrategyBase(address(
                     new TransparentUpgradeableProxy(
                         address(baseStrategyImplementation),
                         address(eigenLayerProxyAdmin),
-                        abi.encodeWithSelector(StrategyBaseTVLLimits.initialize.selector, mockToken, eigenLayerPauserReg)
+                        abi.encodeWithSelector(StrategyBase.initialize.selector, mockToken, eigenLayerPauserReg)
                     )
                 ));
 
@@ -304,8 +321,7 @@ contract EigenLayerDeploy is Script, Test {
         vm.serializeAddress(deployed_addresses, "baseStrategy", address(baseStrategy));
         vm.serializeAddress(deployed_addresses, "baseStrategyImplementation", address(baseStrategyImplementation));
         vm.serializeAddress(deployed_addresses, "ERC20Mock", address(mockToken));
-        vm.serializeAddress(deployed_addresses, "emptyContract", address(emptyContract));
-       // string memory deployed_addresses_output = vm.serializeString(deployed_addresses);
+        string memory deployed_addresses_output = vm.serializeAddress(deployed_addresses, "emptyContract", address(emptyContract));
 
         string memory parameters = "parameters";
         vm.serializeAddress(parameters, "executorMultisig", executorMultisig);
@@ -316,7 +332,7 @@ contract EigenLayerDeploy is Script, Test {
         string memory chain_info_output = vm.serializeUint(chain_info, "chainId", chainId);
 
         // serialize all the data
-        vm.serializeString(parent_object, deployed_addresses);
+        vm.serializeString(parent_object, deployed_addresses, deployed_addresses_output);
         vm.serializeString(parent_object, chain_info, chain_info_output);
         string memory finalJson = vm.serializeString(parent_object, parameters, parameters_output);
         vm.writeJson(finalJson, "script/output/M1_deployment_data.json");
