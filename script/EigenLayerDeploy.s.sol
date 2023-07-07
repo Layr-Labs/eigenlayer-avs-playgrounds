@@ -36,7 +36,7 @@ import "forge-std/Test.sol";
 
 // # To deploy and verify our contract
 // forge script script/M1_Deploy.s.sol:Deployer_M1 --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
-contract Deployer_M1 is Script, Test {
+contract EigenLayerDeploy is Script, Test {
     Vm cheats = Vm(HEVM_ADDRESS);
 
     // struct used to encode token info in config file
@@ -64,6 +64,7 @@ contract Deployer_M1 is Script, Test {
     DelayedWithdrawalRouter public delayedWithdrawalRouterImplementation;
     UpgradeableBeacon public eigenPodBeacon;
     EigenPod public eigenPodImplementation;
+    StrategyBase public baseStrategy;
     StrategyBase public baseStrategyImplementation;
 
     EmptyContract public emptyContract;
@@ -246,7 +247,7 @@ contract Deployer_M1 is Script, Test {
         baseStrategyImplementation = new StrategyBase(strategyManager);
         // create upgradeable proxies that each point to the implementation and initialize them
 
-        StrategyBase = StrategyBase(address(
+        baseStrategy = StrategyBase(address(
                     new TransparentUpgradeableProxy(
                         address(baseStrategyImplementation),
                         address(eigenLayerProxyAdmin),
@@ -285,15 +286,6 @@ contract Deployer_M1 is Script, Test {
         // WRITE JSON DATA
         string memory parent_object = "parent object";
 
-        string memory deployed_strategies = "strategies";
-        for (uint256 i = 0; i < strategyConfigs.length; ++i) {
-            vm.serializeAddress(deployed_strategies, strategyConfigs[i].tokenSymbol, address(deployedStrategyArray[i]));
-        }
-        string memory deployed_strategies_output = vm.serializeAddress(
-            deployed_strategies, strategyConfigs[strategyConfigs.length - 1].tokenSymbol,
-            address(deployedStrategyArray[strategyConfigs.length - 1])
-        );
-
         string memory deployed_addresses = "addresses";
         vm.serializeAddress(deployed_addresses, "eigenLayerProxyAdmin", address(eigenLayerProxyAdmin));
         vm.serializeAddress(deployed_addresses, "eigenLayerPauserReg", address(eigenLayerPauserReg));
@@ -313,7 +305,7 @@ contract Deployer_M1 is Script, Test {
         vm.serializeAddress(deployed_addresses, "baseStrategyImplementation", address(baseStrategyImplementation));
         vm.serializeAddress(deployed_addresses, "ERC20Mock", address(mockToken));
         vm.serializeAddress(deployed_addresses, "emptyContract", address(emptyContract));
-        string memory deployed_addresses_output = vm.serializeString(deployed_addresses, "strategies", deployed_strategies_output);
+       // string memory deployed_addresses_output = vm.serializeString(deployed_addresses);
 
         string memory parameters = "parameters";
         vm.serializeAddress(parameters, "executorMultisig", executorMultisig);
@@ -324,7 +316,7 @@ contract Deployer_M1 is Script, Test {
         string memory chain_info_output = vm.serializeUint(chain_info, "chainId", chainId);
 
         // serialize all the data
-        vm.serializeString(parent_object, deployed_addresses, deployed_addresses_output);
+        vm.serializeString(parent_object, deployed_addresses);
         vm.serializeString(parent_object, chain_info, chain_info_output);
         string memory finalJson = vm.serializeString(parent_object, parameters, parameters_output);
         vm.writeJson(finalJson, "script/output/M1_deployment_data.json");
@@ -373,11 +365,10 @@ contract Deployer_M1 is Script, Test {
             TransparentUpgradeableProxy(payable(address(delayedWithdrawalRouter)))) == address(delayedWithdrawalRouterImplementation),
             "delayedWithdrawalRouter: implementation set incorrectly");
 
-        for (uint256 i = 0; i < deployedStrategyArray.length; ++i) {
-            require(eigenLayerProxyAdmin.getProxyImplementation(
-                TransparentUpgradeableProxy(payable(address(deployedStrategyArray[i])))) == address(baseStrategyImplementation),
-                "strategy: implementation set incorrectly");
-        }
+        require(eigenLayerProxyAdmin.getProxyImplementation(
+            TransparentUpgradeableProxy(payable(address(baseStrategy)))) == address(baseStrategyImplementation),
+            "strategy: implementation set incorrectly");
+        
 
         require(eigenPodBeacon.implementation() == address(eigenPodImplementation),
             "eigenPodBeacon: implementation set incorrectly");
@@ -406,10 +397,9 @@ contract Deployer_M1 is Script, Test {
         require(eigenLayerPauserReg.isPauser(pauserMultisig), "pauserRegistry: pauserMultisig is not pauser");
         require(eigenLayerPauserReg.unpauser() == executorMultisig, "pauserRegistry: unpauser not set correctly");
 
-        for (uint256 i = 0; i < deployedStrategyArray.length; ++i) {
-            require(deployedStrategyArray[i].pauserRegistry() == eigenLayerPauserReg, "StrategyBaseTVLLimits: pauser registry not set correctly");
-            require(deployedStrategyArray[i].paused() == 0, "StrategyBaseTVLLimits: init paused status set incorrectly");
-        }
+        require(baseStrategy.pauserRegistry() == eigenLayerPauserReg, "StrategyBaseTVLLimits: pauser registry not set correctly");
+        require(baseStrategy.paused() == 0, "StrategyBaseTVLLimits: init paused status set incorrectly");
+        
 
         // // pause *nothing*
         // uint256 STRATEGY_MANAGER_INIT_PAUSED_STATUS = 0;
@@ -458,15 +448,6 @@ contract Deployer_M1 is Script, Test {
             " eigenPodImplementation: eigenPodManager contract address not set correctly");
         require(eigenPodImplementation.delayedWithdrawalRouter() == delayedWithdrawalRouter,
             " eigenPodImplementation: delayedWithdrawalRouter contract address not set correctly");
-
-        string memory config_data = vm.readFile(deployConfigPath);
-        for (uint i = 0; i < deployedStrategyArray.length; i++) {
-            uint256 maxPerDeposit = stdJson.readUint(config_data, string.concat(".strategies[", vm.toString(i), "].max_per_deposit"));
-            uint256 maxDeposits = stdJson.readUint(config_data, string.concat(".strategies[", vm.toString(i), "].max_deposits"));
-            (uint256 setMaxPerDeposit, uint256 setMaxDeposits) = deployedStrategyArray[i].getTVLLimits();
-            require(setMaxPerDeposit == maxPerDeposit, "setMaxPerDeposit not set correctly");
-            require(setMaxDeposits == maxDeposits, "setMaxDeposits not set correctly");
-        }
     }
 }
 
