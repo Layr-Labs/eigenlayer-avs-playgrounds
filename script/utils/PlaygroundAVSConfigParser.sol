@@ -19,6 +19,11 @@ import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
 contract PlaygroundAVSConfigParser is Script, DSTest {
+    struct Staker {
+        address addr;
+        uint256 privateKey;
+        uint256 stake;
+    }
     struct Operator {
         address addr;
         uint256 privateKey;
@@ -56,6 +61,22 @@ contract PlaygroundAVSConfigParser is Script, DSTest {
         string memory file = string.concat(input, ".json");
         return vm.readFile(string.concat(inputDir, chainDir, file));
     }
+
+
+    function parseConfigFileForStaker(
+            string memory input
+    ) public returns (Staker[] memory stakers) {
+        string memory avsConfig = readInput(input);
+
+        // getting the staker private keys and address
+        uint256[] memory stakerPrivateKeys = stdJson.readUintArray(avsConfig, ".stakerPrivateKeys");
+        stakers = getStakersFromPrivateKeysAndAddr(stakerPrivateKeys);
+
+        // getting the stake amount in different strategies
+
+
+    }
+
 
     function parseConfigFile(
         string memory input
@@ -100,6 +121,17 @@ contract PlaygroundAVSConfigParser is Script, DSTest {
         }
 
         return (contracts, operators);
+    }
+
+
+    function getStakersFromPrivateKeysAndAddr(
+        uint256[] memory stakerPrivateKeys
+    ) public pure returns (Staker[] memory stakers) {
+        stakers = new Staker[](stakerPrivateKeys.length);
+        for (uint i = 0; i < stakers.length; i++) {
+            stakers[i].privateKey = stakerPrivateKeys[i];
+            stakers[i].addr = vm.addr(stakerPrivateKeys[i]);
+        }
     }
 
     function getOperatorsFromPrivateKeys(
