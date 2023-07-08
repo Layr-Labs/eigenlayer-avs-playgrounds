@@ -7,6 +7,7 @@ import "@eigenlayer/contracts/core/DelegationManager.sol";
 import "@eigenlayer/contracts/core/StrategyManager.sol";
 import "@eigenlayer/contracts/strategies/StrategyBase.sol";
 import "@eigenlayer/contracts/core/Slasher.sol";
+import "@eigenlayer/contracts/libraries/BN254.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -15,11 +16,13 @@ import "@playground-avs/core/PlaygroundAVSServiceManagerV1.sol";
 
 import "forge-std/StdJson.sol";
 import "forge-std/Script.sol";
+import "forge-std/Test.sol";
 
-contract PlaygroundAVSConfigParser is Script {
+contract PlaygroundAVSConfigParser is Script, DSTest {
     struct Operator {
         address addr;
         uint256 privateKey;
+        BN254.G1Point blsPubKey;
     }
     struct Contracts {
         Eigenlayer eigenlayer;
@@ -81,6 +84,20 @@ contract PlaygroundAVSConfigParser is Script {
         Operator[] memory operators = getOperatorsFromPrivateKeys(
             operatorPrivateKeys
         );
+        bytes memory operatorsBN254G1CoordinatesRaw = stdJson.parseRaw(
+            avsConfig,
+            ".operatorsBN254G1Coordinates"
+        );
+        uint256[][] memory operatorsBN254G1Coordinates = abi.decode(
+            operatorsBN254G1CoordinatesRaw,
+            (uint256[][])
+        );
+        for (uint256 i = 0; i < operators.length; i++) {
+            operators[i].blsPubKey = BN254.G1Point(
+                operatorsBN254G1Coordinates[i][0],
+                operatorsBN254G1Coordinates[i][1]
+            );
+        }
 
         return (contracts, operators);
     }

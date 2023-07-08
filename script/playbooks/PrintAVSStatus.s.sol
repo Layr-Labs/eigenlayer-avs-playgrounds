@@ -17,7 +17,11 @@ contract PrintAVSStatus is Script, DSTest, PlaygroundAVSConfigParser, Utils {
         Operator[] memory operators;
         (contracts, operators) = parseConfigFile(input);
 
-        printOperatorStatus(operators[0], contracts);
+        for (uint256 i = 0; i < operators.length; i++) {
+            emit log_named_uint("PRINTING STATUS OF OPERATOR", i);
+            printOperatorStatus(operators[i], contracts);
+            emit log("--------------------------------------------------");
+        }
     }
 
     function printOperatorStatus(
