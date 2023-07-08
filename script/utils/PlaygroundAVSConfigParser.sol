@@ -22,7 +22,7 @@ contract PlaygroundAVSConfigParser is Script, DSTest {
     struct Staker {
         address addr;
         uint256 privateKey;
-        uint256 stake;
+        uint256[] stakeAllocated;
     }
     struct Operator {
         address addr;
@@ -48,6 +48,7 @@ contract PlaygroundAVSConfigParser is Script, DSTest {
         // TODO: add registry contracts
         IRegistryCoordinator registryCoordinator;
     }
+    
 
     // Forge scripts best practice: https://book.getfoundry.sh/tutorials/best-practices#scripts
     function readInput(
@@ -65,16 +66,48 @@ contract PlaygroundAVSConfigParser is Script, DSTest {
 
     function parseConfigFileForStaker(
             string memory input
-    ) public returns (Staker[] memory stakers) {
+    ) public returns (Staker[] memory, address[] memory) {
         string memory avsConfig = readInput(input);
 
-        // getting the staker private keys and address
+        /* getting the staker private keys and address */
+        Staker[] memory stakers;
         uint256[] memory stakerPrivateKeys = stdJson.readUintArray(avsConfig, ".stakerPrivateKeys");
         stakers = getStakersFromPrivateKeysAndAddr(stakerPrivateKeys);
 
-        // getting the stake amount in different strategies
+
+        /* getting the stake amount in different strategies */
+        // stakerTokenAmount[i][j] is the amount of token i that staker j will receive
+        bytes memory stakerTokenAmountsRaw = stdJson.parseRaw(
+            avsConfig,
+            ".stake"
+        );
+        // emit log_bytes(stakerTokenAmountsRaw);
+        uint256[][] memory stakerTokenAmounts = abi.decode(
+            stakerTokenAmountsRaw,
+            (uint256[][])
+        );
+        // address[] memory strategies = stdJson.readAddressArray(avsConfig, ".strategies");
+        uint numstrategies = stdJson.readAddressArray(avsConfig, ".strategies").length;
+        for (uint j = 0; j < stakers.length; j++) {
+            uint256[] memory stake = new uint256[](numstrategies);
+            for (uint i = 0; i < numstrategies; i++) {
+                stake[i] = stakerTokenAmounts[i][j];
+            }
+            stakers[j].stakeAllocated = stake;
+        }
 
 
+        /* getting the strategy contracts */
+        // StrategyBase[] memory strategyContracts = new StrategyBase[](numstrategies);
+        address[] memory strategyContractsAddresses = stdJson.readAddressArray(
+            avsConfig,
+            ".strategies"
+        );
+        // for (uint i = 0; i < numstrategies; i++) {
+        //     strategyContracts[i] = StrategyBase(strategyContractsAddresses[i]);
+        // }
+
+        return (stakers, strategyContractsAddresses);
     }
 
 

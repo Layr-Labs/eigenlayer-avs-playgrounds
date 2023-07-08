@@ -1,9 +1,9 @@
 {
-  "blsOperatorStateRetriever": "0x36C02dA8a0983159322a80FFE9F24b1acfF8B570",
+  "blsOperatorStateRetriever": "0x95775fD3Afb1F4072794CA4ddA27F2444BCf8Ac3",
   "object": "playgroundAVS deployment output",
-  "playgroundAVSServiceManager": "0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690",
-  "strat0": "0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f",
-  "strat1": "0x4A679253410272dd5232B3Ff7cF5dbB88f295319",
-  "underlyingToken0": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-  "underlyingToken1": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
+  "playgroundAVSServiceManager": "0x71a0b8A2245A9770A4D887cE1E4eCc6C1d4FF28c",
+  "strat0": "0x8e264821AFa98DD104eEcfcfa7FD9f8D8B320adA",
+  "strat1": "0x871ACbEabBaf8Bed65c22ba7132beCFaBf8c27B5",
+  "underlyingToken0": "0x8fC8CFB7f7362E44E472c690A6e025B80E406458",
+  "underlyingToken1": "0xC7143d5bA86553C06f5730c8dC9f8187a621A8D4"
 }

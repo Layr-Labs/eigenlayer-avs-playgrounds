@@ -3,8 +3,9 @@ pragma solidity =0.8.12;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@eigenlayer/contracts/interfaces/IRegistryCoordinator.sol";
+import "@eigenlayer/contracts/strategies/StrategyBase.sol";
 
-// import "forge-std/Script.sol";
+import "forge-std/Script.sol";
 import "forge-std/StdJson.sol";
 
 contract Utils {
@@ -19,6 +20,17 @@ contract Utils {
             } else {
                 token.transfer(tos[i], amounts[i]);
             }
+        }
+    }
+    
+    function _allocateNew(
+        address strategyAddress,
+        address[] memory tos,
+        uint256[] memory amounts
+    ) internal {
+        for (uint256 i = 0; i < tos.length; i++) {
+            IERC20 underlyingToken = StrategyBase(strategyAddress).underlyingToken();
+            underlyingToken.transfer(tos[i], amounts[i]);
         }
     }
 
