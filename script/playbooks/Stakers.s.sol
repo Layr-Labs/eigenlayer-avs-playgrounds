@@ -5,24 +5,32 @@ pragma solidity =0.8.12;
 import "@eigenlayer/contracts/strategies/StrategyBase.sol";
 import "../utils/PlaygroundAVSConfigParser.sol";
 import "../utils/Utils.sol";
+import "./Operators.s.sol";
 
 
-contract Stakers is Script,PlaygroundAVSConfigParser, Utils {
+contract Stakers is Script, PlaygroundAVSConfigParser, Utils {
 
     function run(string memory input) external {
 
+        // parsing input for stakers
         Staker[] memory stakers;
         address[] memory strategyAddresses;
-        
-        // parsing input
         (stakers, strategyAddresses) = parseConfigFileForStaker(input);
 
-        // allocation of token
-        allocateTokenOnChain(stakers, strategyAddresses);
+        // allocation of token to stakers
+        allocateTokenToStakers(stakers, strategyAddresses);
+
+        // parsing input for operators 
+        Contracts memory contracts;
+        Operator[] memory operators;
+        (contracts, operators) = parseConfigFile(input);
+
+        // stakers delegating to the operators
+
     }
 
 
-    function allocateTokenOnChain(
+    function allocateTokenToStakers(
         Staker[] memory stakers, 
         address[] memory strategyAddresses
     ) public {
@@ -52,4 +60,34 @@ contract Stakers is Script,PlaygroundAVSConfigParser, Utils {
             vm.stopBroadcast();
         }
     }
+
+//     function delgateToOperators(
+//         Staker[] memory stakers, 
+//         Operators[] memory operator,
+//         Contracts memory contracts,
+//         address[] memory strategyAddress
+//     ) public {
+
+//         uint256[] memory stakerPrivateKeys = new uint256[](stakers.length);
+        
+//         // Deposit stakers into EigenLayer and delegate to operators
+//         for (uint256 i = 0; i < stakerPrivateKeys.length; i++) {
+//             vm.startBroadcast(stakerPrivateKeys[i]);
+//             for (uint j = 0; j < strategyAddress.length; j++) {
+//                 if (stakerTokenAmounts[j][i] > 0) {
+//                     deployedStrategyArray[j].underlyingToken().approve(
+//                         address(strategyManager),
+//                         stakerTokenAmounts[j][i]
+//                     );
+//                     strategyManager.depositIntoStrategy(
+//                         deployedStrategyArray[j],
+//                         deployedStrategyArray[j].underlyingToken(),
+//                         stakerTokenAmounts[j][i]
+//                     );
+//                 }
+//             }
+//             delegation.delegateTo(operators[i]);
+//             vm.stopBroadcast();
+//         }
+//     }
 }
