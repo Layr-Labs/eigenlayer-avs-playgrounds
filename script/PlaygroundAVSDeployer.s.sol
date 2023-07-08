@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-import "@eigenlayer-scripts/middleware/DeployOpenEigenLayer.s.sol";
+import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
 import "@eigenlayer/contracts/permissions/PauserRegistry.sol";
 
@@ -28,7 +28,7 @@ import "forge-std/StdJson.sol";
 
 // # To deploy and verify our contract
 // forge script script/PlaygroundAVSDeployer.s.sol:PlaygroundAVSDeployer --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
-contract PlaygroundAVSDeployer is DeployOpenEigenLayer {
+contract PlaygroundAVSDeployer is Script {
     // PlaygroundAVS contracts
     ProxyAdmin public playgroundAVSProxyAdmin;
     PauserRegistry public playgroundAVSPauserReg;
@@ -41,35 +41,56 @@ contract PlaygroundAVSDeployer is DeployOpenEigenLayer {
     IStakeRegistry public stakeRegistry;
     BLSOperatorStateRetriever public blsOperatorStateRetriever;
 
-    PlaygroundAVSServiceManagerV1 public PlaygroundAVSServiceManagerV1Implementation;
+    PlaygroundAVSServiceManagerV1
+        public PlaygroundAVSServiceManagerV1Implementation;
     IBLSRegistryCoordinatorWithIndices public registryCoordinatorImplementation;
     IBLSPubkeyRegistry public blsPubkeyRegistryImplementation;
     IIndexRegistry public indexRegistryImplementation;
     IStakeRegistry public stakeRegistryImplementation;
-    
-    function _deployPlaygroundAVSAndEigenLayerContracts(
-        address eigenLayerCommunityMultisig,
-        address eigenLayerOperationsMultisig,
-        address eigenLayerPauserMultisig,
-        address playgroundAVSCommunityMultisig,
-        address playgroundAVSPauser,
-        uint8 numStrategies,
-        uint256 initialSupply,
-        address tokenOwner
-    ) internal {
-        StrategyConfig[] memory strategyConfigs = new StrategyConfig[](numStrategies);
-        // deploy a token and create a strategy config for each token
-        for (uint8 i = 0; i < numStrategies; i++) {
-            address tokenAddress = address(new ERC20PresetFixedSupply(string(abi.encodePacked("Token", i)), string(abi.encodePacked("TOK", i)), initialSupply, tokenOwner));
-            strategyConfigs[i] = StrategyConfig({
-                maxDeposits: type(uint256).max,
-                maxPerDeposit: type(uint256).max,
-                tokenAddress: tokenAddress,
-                tokenSymbol: string(abi.encodePacked("TOK", i))
-            });
-        }
 
-        _deployEigenLayer(eigenLayerCommunityMultisig, eigenLayerOperationsMultisig, eigenLayerPauserMultisig, strategyConfigs);
+    function run() external {
+        string
+            memory _deployConfigPath = "script/output/M1_deployment_data.json";
+        string memory configData = vm.readFile(_deployConfigPath);
+        IStrategyManager strategyManager = IStrategyManager(
+            stdJson.readAddress(configData, ".addresses.strategyManager")
+        );
+        IDelegationManager delegationManager = IDelegationManager(
+            stdJson.readAddress(configData, ".addresses.delegation")
+        );
+        ISlasher slasher = ISlasher(stdJson.readAddress(configData, ".addresses.slasher"));
+        IStrategy strat = IStrategy(
+            stdJson.readAddress(configData, ".addresses.baseStrategy")
+        );
+
+        address playgroundAVSCommunityMultisig = msg.sender;
+        address playgroundAVSPauser = msg.sender;
+
+        // vm.startBroadcast();
+        _deployPlaygroundAVSContracts(
+            strategyManager,
+            delegationManager,
+            slasher,
+            strat,
+            playgroundAVSCommunityMultisig,
+            playgroundAVSPauser
+        );
+
+        // vm.stopBroadcast();
+    }
+
+    function _deployPlaygroundAVSContracts(
+        IStrategyManager strategyManager,
+        IDelegationManager delegationManager,
+        ISlasher slasher,
+        IStrategy strat,
+        address playgroundAVSCommunityMultisig,
+        address playgroundAVSPauser
+    ) internal {
+        // Adding this as a temporary fix to make the rest of the script work with a single strategy
+        // since it was originally written to work with an array of strategies
+        IStrategy[1] memory deployedStrategyArray = [strat];
+        uint numStrategies = deployedStrategyArray.length;
 
         // deploy proxy admin for ability to upgrade proxy contracts
         playgroundAVSProxyAdmin = new ProxyAdmin();
@@ -79,10 +100,13 @@ contract PlaygroundAVSDeployer is DeployOpenEigenLayer {
             address[] memory pausers = new address[](2);
             pausers[0] = playgroundAVSPauser;
             pausers[1] = playgroundAVSCommunityMultisig;
-            playgroundAVSPauserReg = new PauserRegistry(pausers, playgroundAVSCommunityMultisig);
+            playgroundAVSPauserReg = new PauserRegistry(
+                pausers,
+                playgroundAVSCommunityMultisig
+            );
         }
 
-        emptyContract = new EmptyContract();
+        EmptyContract emptyContract = new EmptyContract();
 
         // hard-coded inputs
 
@@ -91,20 +115,50 @@ contract PlaygroundAVSDeployer is DeployOpenEigenLayer {
          * not yet deployed, we give these proxies an empty contract as the initial implementation, to act as if they have no code.
          */
         playgroundAVSServiceManagerV1 = PlaygroundAVSServiceManagerV1(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(playgroundAVSProxyAdmin), ""))
+            address(
+                new TransparentUpgradeableProxy(
+                    address(emptyContract),
+                    address(playgroundAVSProxyAdmin),
+                    ""
+                )
+            )
         );
         pubkeyCompendium = new BLSPublicKeyCompendium();
         registryCoordinator = BLSRegistryCoordinatorWithIndices(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(playgroundAVSProxyAdmin), ""))
+            address(
+                new TransparentUpgradeableProxy(
+                    address(emptyContract),
+                    address(playgroundAVSProxyAdmin),
+                    ""
+                )
+            )
         );
         blsPubkeyRegistry = IBLSPubkeyRegistry(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(playgroundAVSProxyAdmin), ""))
+            address(
+                new TransparentUpgradeableProxy(
+                    address(emptyContract),
+                    address(playgroundAVSProxyAdmin),
+                    ""
+                )
+            )
         );
         indexRegistry = IIndexRegistry(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(playgroundAVSProxyAdmin), ""))
+            address(
+                new TransparentUpgradeableProxy(
+                    address(emptyContract),
+                    address(playgroundAVSProxyAdmin),
+                    ""
+                )
+            )
         );
         stakeRegistry = IStakeRegistry(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(playgroundAVSProxyAdmin), ""))
+            address(
+                new TransparentUpgradeableProxy(
+                    address(emptyContract),
+                    address(playgroundAVSProxyAdmin),
+                    ""
+                )
+            )
         );
 
         // Second, deploy the *implementation* contracts, using the *proxy contracts* as inputs
@@ -116,14 +170,20 @@ contract PlaygroundAVSDeployer is DeployOpenEigenLayer {
             );
 
             // set up a quorum with each strategy that needs to be set up
-            uint96[] memory minimumStakeForQuourm = new uint96[](numStrategies);
-            IVoteWeigher.StrategyAndWeightingMultiplier[][] memory strategyAndWeightingMultipliers = new IVoteWeigher.StrategyAndWeightingMultiplier[][](numStrategies);
+            uint96[] memory minimumStakeForQuorum = new uint96[](numStrategies);
+            IVoteWeigher.StrategyAndWeightingMultiplier[][]
+                memory strategyAndWeightingMultipliers = new IVoteWeigher.StrategyAndWeightingMultiplier[][](
+                    numStrategies
+                );
             for (uint i = 0; i < numStrategies; i++) {
-                strategyAndWeightingMultipliers[i] = new IVoteWeigher.StrategyAndWeightingMultiplier[](1);
-                strategyAndWeightingMultipliers[i][0] = IVoteWeigher.StrategyAndWeightingMultiplier({
-                    strategy: deployedStrategyArray[i],
-                    multiplier: 1 gwei
-                });
+                strategyAndWeightingMultipliers[
+                    i
+                ] = new IVoteWeigher.StrategyAndWeightingMultiplier[](1);
+                strategyAndWeightingMultipliers[i][0] = IVoteWeigher
+                    .StrategyAndWeightingMultiplier({
+                        strategy: deployedStrategyArray[i],
+                        multiplier: 1 gwei
+                    });
             }
 
             playgroundAVSProxyAdmin.upgradeAndCall(
@@ -131,7 +191,7 @@ contract PlaygroundAVSDeployer is DeployOpenEigenLayer {
                 address(stakeRegistryImplementation),
                 abi.encodeWithSelector(
                     StakeRegistry.initialize.selector,
-                    minimumStakeForQuourm,
+                    minimumStakeForQuorum,
                     strategyAndWeightingMultipliers
                 )
             );
@@ -144,20 +204,26 @@ contract PlaygroundAVSDeployer is DeployOpenEigenLayer {
             blsPubkeyRegistry,
             indexRegistry
         );
-        
+
         {
-            IBLSRegistryCoordinatorWithIndices.OperatorSetParam[] memory operatorSetParams = new IBLSRegistryCoordinatorWithIndices.OperatorSetParam[](numStrategies);
+            IBLSRegistryCoordinatorWithIndices.OperatorSetParam[]
+                memory operatorSetParams = new IBLSRegistryCoordinatorWithIndices.OperatorSetParam[](
+                    numStrategies
+                );
             for (uint i = 0; i < numStrategies; i++) {
                 // hard code these for now
-                operatorSetParams[i] = IBLSRegistryCoordinatorWithIndices.OperatorSetParam({
-                    maxOperatorCount: 10000,
-                    kickBIPsOfOperatorStake: 15000,
-                    kickBIPsOfAverageStake: 5000,
-                    kickBIPsOfTotalStake: 100
-                });
+                operatorSetParams[i] = IBLSRegistryCoordinatorWithIndices
+                    .OperatorSetParam({
+                        maxOperatorCount: 10000,
+                        kickBIPsOfOperatorStake: 15000,
+                        kickBIPsOfAverageStake: 5000,
+                        kickBIPsOfTotalStake: 100
+                    });
             }
             playgroundAVSProxyAdmin.upgradeAndCall(
-                TransparentUpgradeableProxy(payable(address(registryCoordinator))),
+                TransparentUpgradeableProxy(
+                    payable(address(registryCoordinator))
+                ),
                 address(registryCoordinatorImplementation),
                 abi.encodeWithSelector(
                     BLSRegistryCoordinatorWithIndices.initialize.selector,
@@ -176,9 +242,7 @@ contract PlaygroundAVSDeployer is DeployOpenEigenLayer {
             address(blsPubkeyRegistryImplementation)
         );
 
-        indexRegistryImplementation = new IndexRegistry(
-            registryCoordinator
-        );
+        indexRegistryImplementation = new IndexRegistry(registryCoordinator);
 
         playgroundAVSProxyAdmin.upgrade(
             TransparentUpgradeableProxy(payable(address(indexRegistry))),
@@ -188,13 +252,15 @@ contract PlaygroundAVSDeployer is DeployOpenEigenLayer {
         PlaygroundAVSServiceManagerV1Implementation = new PlaygroundAVSServiceManagerV1(
             registryCoordinator,
             strategyManager,
-            delegation,
+            delegationManager,
             slasher
         );
 
         // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
         playgroundAVSProxyAdmin.upgradeAndCall(
-            TransparentUpgradeableProxy(payable(address(playgroundAVSServiceManagerV1))),
+            TransparentUpgradeableProxy(
+                payable(address(playgroundAVSServiceManagerV1))
+            ),
             address(PlaygroundAVSServiceManagerV1Implementation),
             abi.encodeWithSelector(
                 PlaygroundAVSServiceManagerV1.initialize.selector,
