@@ -38,6 +38,7 @@ contract PlaygroundAVSConfigParser is Script {
     struct PlaygroundAVS {
         PlaygroundAVSServiceManagerV1 serviceManager;
         // TODO: add registry contracts
+        IRegistryCoordinator registryCoordinator;
     }
 
     // Forge scripts best practice: https://book.getfoundry.sh/tutorials/best-practices#scripts
@@ -101,6 +102,10 @@ contract PlaygroundAVSConfigParser is Script {
         contracts.playgroundAVS.serviceManager = PlaygroundAVSServiceManagerV1(
             playgroundAVSServiceManagerV1
         );
+        contracts.playgroundAVS.registryCoordinator = contracts
+            .playgroundAVS
+            .serviceManager
+            .registryCoordinator();
         contracts.eigenlayer.delegationManager = contracts
             .playgroundAVS
             .serviceManager

@@ -7,6 +7,8 @@ import "forge-std/Test.sol";
 import "../utils/PlaygroundAVSConfigParser.sol";
 import "../utils/Utils.sol";
 
+import "@eigenlayer/contracts/interfaces/IRegistryCoordinator.sol";
+
 contract PrintAVSStatus is Script, DSTest, PlaygroundAVSConfigParser, Utils {
     // default forge script entrypoint. Run with
     // forge script script/playbooks/PrintAVSStatus.s.sol --sig "run(string memory input)" --broadcast -vvvv --rpc-url $RPC_URL playgroundAVS_input
@@ -47,5 +49,25 @@ contract PrintAVSStatus is Script, DSTest, PlaygroundAVSConfigParser, Utils {
             "operator is opted in to playgroundAVS (aka can be slashed)",
             convertBoolToString(canBeSlashedByPlaygroundAVS)
         );
-    }
+        IRegistryCoordinator.Operator memory operatorFromRegistry = contracts
+            .playgroundAVS
+            .registryCoordinator
+            .getOperator(operator.addr);
+        emit log_named_bytes32(
+            "operatorId from registry",
+            operatorFromRegistry.operatorId
+        );
+        emit log_named_uint(
+            "operator fromTaskNumber from registry",
+            operatorFromRegistry.fromTaskNumber
+        );
+        emit log_named_string(
+            "operator status from registry",
+            convertOperatorStatusToString(operatorFromRegistry.status)
+        );
+        bool isFrozen = contracts.eigenlayer.slasher.isFrozen(operator.addr);
+        emit log_named_string(
+            "operator is frozen",
+            convertBoolToString(isFrozen)
+        );}
 }

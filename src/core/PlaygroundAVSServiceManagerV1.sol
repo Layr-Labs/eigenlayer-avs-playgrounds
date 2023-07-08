@@ -10,6 +10,7 @@ import "@eigenlayer/contracts/middleware/BLSSignatureChecker.sol";
 import "@eigenlayer/contracts/interfaces/IDelegationManager.sol";
 import "@eigenlayer/contracts/interfaces/IDelegationTerms.sol";
 import "@eigenlayer/contracts/interfaces/IPaymentManager.sol";
+import "@eigenlayer/contracts/interfaces/IServiceManager.sol";
 
 import "@eigenlayer/contracts/libraries/BytesLib.sol";
 import "@eigenlayer/contracts/libraries/Merkle.sol";
@@ -26,6 +27,7 @@ import "./PlaygroundAVSServiceManagerV1Storage.sol";
  * - freezing operators as the result of various "challenges"
  */
 contract PlaygroundAVSServiceManagerV1 is
+    IServiceManager,
     Initializable,
     OwnableUpgradeable,
     PlaygroundAVSServiceManagerV1Storage,

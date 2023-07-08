@@ -2,6 +2,7 @@
 pragma solidity =0.8.12;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@eigenlayer/contracts/interfaces/IRegistryCoordinator.sol";
 
 // import "forge-std/Script.sol";
 import "forge-std/StdJson.sol";
@@ -28,6 +29,27 @@ contract Utils {
             return "true";
         } else {
             return "false";
+        }
+    }
+
+    function convertOperatorStatusToString(
+        IRegistryCoordinator.OperatorStatus operatorStatus
+    ) public pure returns (string memory) {
+        if (
+            operatorStatus ==
+            IRegistryCoordinator.OperatorStatus.NEVER_REGISTERED
+        ) {
+            return "NEVER_REGISTERED";
+        } else if (
+            operatorStatus == IRegistryCoordinator.OperatorStatus.REGISTERED
+        ) {
+            return "REGISTERED";
+        } else if (
+            operatorStatus == IRegistryCoordinator.OperatorStatus.DEREGISTERED
+        ) {
+            return "DEREGISTERED";
+        } else {
+            return "UNKNOWN";
         }
     }
 }
