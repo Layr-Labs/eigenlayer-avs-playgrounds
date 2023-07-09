@@ -5,7 +5,7 @@ import "../utils/PlaygroundAVSConfigParser.sol";
 
 contract Operators is Script, PlaygroundAVSConfigParser {
     // default forge script entrypoint. Run with
-    // forge script script/playbooks/Operators.s.sol --sig "run(string memory input)" --rpc-url $RPC_URL playgroundAVS_input --broadcast
+    // forge script script/playbooks/Operators.s.sol --sig "run(string memory input)" --rpc-url $RPC_URL playground_avs_input --broadcast
     function run(string memory input) external {
         Contracts memory contracts;
         Operator[] memory operators;

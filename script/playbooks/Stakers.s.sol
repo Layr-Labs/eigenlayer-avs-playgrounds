@@ -8,7 +8,7 @@ import "../utils/Utils.sol";
 import "./Operators.s.sol";
 
 
-contract Stakers is Script, PlaygroundAVSConfigParser, Utils {
+contract Stakers is Script, PlaygroundAVSConfigParser {
 
     function run(string memory input) external {
 

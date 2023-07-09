@@ -9,9 +9,9 @@ import "../utils/Utils.sol";
 
 import "@eigenlayer/contracts/interfaces/IRegistryCoordinator.sol";
 
-contract PrintAVSStatus is Script, DSTest, PlaygroundAVSConfigParser, Utils {
+contract PrintAVSStatus is Script, DSTest, PlaygroundAVSConfigParser {
     // default forge script entrypoint. Run with
-    // forge script script/playbooks/PrintAVSStatus.s.sol --sig "run(string memory input)" --broadcast -vvvv --rpc-url $RPC_URL playgroundAVS_input
+    // forge script script/playbooks/PrintAVSStatus.s.sol --sig "run(string memory input)" --broadcast -vvvv --rpc-url $RPC_URL playground_avs_input
     function run(string memory input) external {
         Contracts memory contracts;
         Operator[] memory operators;

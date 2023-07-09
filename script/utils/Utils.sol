@@ -8,7 +8,7 @@ import "@eigenlayer/contracts/strategies/StrategyBase.sol";
 import "forge-std/Script.sol";
 import "forge-std/StdJson.sol";
 
-contract Utils {
+contract Utils is Script {
     function _allocate(
         IERC20 token,
         address[] memory tos,
@@ -22,14 +22,15 @@ contract Utils {
             }
         }
     }
-    
+
     function _allocateNew(
         address strategyAddress,
         address[] memory tos,
         uint256[] memory amounts
     ) internal {
         for (uint256 i = 0; i < tos.length; i++) {
-            IERC20 underlyingToken = StrategyBase(strategyAddress).underlyingToken();
+            IERC20 underlyingToken = StrategyBase(strategyAddress)
+                .underlyingToken();
             underlyingToken.transfer(tos[i], amounts[i]);
         }
     }
@@ -63,5 +64,48 @@ contract Utils {
         } else {
             return "UNKNOWN";
         }
+    }
+
+    // Forge scripts best practice: https://book.getfoundry.sh/tutorials/best-practices#scripts
+    function readInput(
+        string memory inputFileName
+    ) internal view returns (string memory) {
+        string memory inputDir = string.concat(
+            vm.projectRoot(),
+            "/script/input/"
+        );
+        string memory chainDir = string.concat(vm.toString(block.chainid), "/");
+        string memory file = string.concat(inputFileName, ".json");
+        return vm.readFile(string.concat(inputDir, chainDir, file));
+    }
+
+    function readOutput(
+        string memory outputFileName
+    ) internal view returns (string memory) {
+        string memory inputDir = string.concat(
+            vm.projectRoot(),
+            "/script/output/"
+        );
+        string memory chainDir = string.concat(vm.toString(block.chainid), "/");
+        string memory file = string.concat(outputFileName, ".json");
+        return vm.readFile(string.concat(inputDir, chainDir, file));
+    }
+
+    function writeOutput(
+        string memory outputJson,
+        string memory outputFileName
+    ) internal {
+        string memory outputDir = string.concat(
+            vm.projectRoot(),
+            "/script/output/"
+        );
+        string memory chainDir = string.concat(vm.toString(block.chainid), "/");
+        string memory outputFilePath = string.concat(
+            outputDir,
+            chainDir,
+            outputFileName,
+            ".json"
+        );
+        vm.writeJson(outputJson, outputFilePath);
     }
 }

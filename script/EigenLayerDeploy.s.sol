@@ -30,12 +30,14 @@ import "@eigenlayer/test/mocks/ETHDepositMock.sol";
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
+import "./utils/Utils.sol";
+
 // # To load the variables in the .env file
 // source .env
 
 // # To deploy and verify our contract
 // forge script script/EigenLayerDeploy.s.sol --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
-contract EigenLayerDeploy is Script, Test {
+contract EigenLayerDeploy is Script, Test, Utils {
     Vm cheats = Vm(HEVM_ADDRESS);
 
     // struct used to encode token info in config file
@@ -45,9 +47,6 @@ contract EigenLayerDeploy is Script, Test {
         address tokenAddress;
         string tokenSymbol;
     }
-
-    string public deployConfigPath =
-        string(bytes("script/EigenLayerDeployConfigGoerli.json"));
 
     // EigenLayer Contracts
     ProxyAdmin public eigenLayerProxyAdmin;
@@ -99,7 +98,7 @@ contract EigenLayerDeploy is Script, Test {
         emit log_named_uint("You are deploying on ChainID", chainId);
 
         // READ JSON CONFIG DATA
-        string memory config_data = vm.readFile(deployConfigPath);
+        string memory config_data = readInput("eigenlayer_deployment_input");
         // bytes memory parsedData = vm.parseJson(config_data);
 
         STRATEGY_MANAGER_INIT_PAUSED_STATUS = stdJson.readUint(
@@ -533,7 +532,7 @@ contract EigenLayerDeploy is Script, Test {
             parameters,
             parameters_output
         );
-        vm.writeJson(finalJson, "script/output/M1_deployment_data.json");
+        writeOutput(finalJson, "eigenlayer_deployment_output");
     }
 
     function _verifyContractsPointAtOneAnother(

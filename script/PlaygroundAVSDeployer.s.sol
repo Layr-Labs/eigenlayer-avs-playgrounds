@@ -16,6 +16,8 @@ import "@eigenlayer/test/mocks/EmptyContract.sol";
 
 import "../src/core/PlaygroundAVSServiceManagerV1.sol";
 
+import "./utils/Utils.sol";
+
 import "forge-std/Test.sol";
 
 import "forge-std/Script.sol";
@@ -28,7 +30,7 @@ import "forge-std/StdJson.sol";
 
 // # To deploy and verify our contract
 // forge script script/PlaygroundAVSDeployer.s.sol:PlaygroundAVSDeployer --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
-contract PlaygroundAVSDeployer is Script {
+contract PlaygroundAVSDeployer is Script, Utils {
     // PlaygroundAVS contracts
     ProxyAdmin public playgroundAVSProxyAdmin;
     PauserRegistry public playgroundAVSPauserReg;
@@ -49,16 +51,16 @@ contract PlaygroundAVSDeployer is Script {
     IStakeRegistry public stakeRegistryImplementation;
 
     function run() external {
-        string
-            memory _deployConfigPath = "script/output/M1_deployment_data.json";
-        string memory configData = vm.readFile(_deployConfigPath);
+        string memory configData = readOutput("eigenlayer_deployment_output");
         IStrategyManager strategyManager = IStrategyManager(
             stdJson.readAddress(configData, ".addresses.strategyManager")
         );
         IDelegationManager delegationManager = IDelegationManager(
             stdJson.readAddress(configData, ".addresses.delegation")
         );
-        ISlasher slasher = ISlasher(stdJson.readAddress(configData, ".addresses.slasher"));
+        ISlasher slasher = ISlasher(
+            stdJson.readAddress(configData, ".addresses.slasher")
+        );
         IStrategy strat = IStrategy(
             stdJson.readAddress(configData, ".addresses.baseStrategy")
         );
@@ -274,5 +276,29 @@ contract PlaygroundAVSDeployer is Script {
         blsOperatorStateRetriever = new BLSOperatorStateRetriever(
             registryCoordinator
         );
+
+        // WRITE JSON DATA
+        string memory parent_object = "parent object";
+
+        string memory deployed_addresses = "addresses";
+        vm.serializeAddress(
+            deployed_addresses,
+            "blsOperatorStateRetriever",
+            address(blsOperatorStateRetriever)
+        );
+        string memory deployed_addresses_output = vm.serializeAddress(
+            deployed_addresses,
+            "playgroundAVSServiceManager",
+            address(playgroundAVSServiceManagerV1)
+        );
+
+        // serialize all the data
+        string memory finalJson = vm.serializeString(
+            parent_object,
+            deployed_addresses,
+            deployed_addresses_output
+        );
+
+        writeOutput(finalJson, "playground_avs_deployment_output");
     }
 }

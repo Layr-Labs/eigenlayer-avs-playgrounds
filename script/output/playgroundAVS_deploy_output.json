@@ -1,9 +1,0 @@
-{
-  "blsOperatorStateRetriever": "0xb007167714e2940013EC3bb551584130B7497E22",
-  "object": "playgroundAVS deployment output",
-  "playgroundAVSServiceManager": "0x5Ffe31E4676D3466268e28a75E51d1eFa4298620",
-  "strat0": "0x2F54D1563963fC04770E85AF819c89Dc807f6a06",
-  "strat1": "0xF342E904702b1D021F03f519D6D9614916b03f37",
-  "underlyingToken0": "0xCa1D199b6F53Af7387ac543Af8e8a34455BBe5E0",
-  "underlyingToken1": "0xdF46e54aAadC1d55198A4a8b4674D7a4c927097A"
-}

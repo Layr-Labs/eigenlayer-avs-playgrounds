@@ -14,11 +14,13 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // Can't use the interface when we need access to state variables
 import "@playground-avs/core/PlaygroundAVSServiceManagerV1.sol";
 
+import "./Utils.sol";
+
 import "forge-std/StdJson.sol";
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
-contract PlaygroundAVSConfigParser is Script, DSTest {
+contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
     struct Staker {
         address addr;
         uint256 privateKey;
@@ -45,35 +47,21 @@ contract PlaygroundAVSConfigParser is Script, DSTest {
     }
     struct PlaygroundAVS {
         PlaygroundAVSServiceManagerV1 serviceManager;
-        // TODO: add registry contracts
         IRegistryCoordinator registryCoordinator;
     }
-    
-
-    // Forge scripts best practice: https://book.getfoundry.sh/tutorials/best-practices#scripts
-    function readInput(
-        string memory input
-    ) internal view returns (string memory) {
-        string memory inputDir = string.concat(
-            vm.projectRoot(),
-            "/script/input/"
-        );
-        string memory chainDir = string.concat(vm.toString(block.chainid), "/");
-        string memory file = string.concat(input, ".json");
-        return vm.readFile(string.concat(inputDir, chainDir, file));
-    }
-
 
     function parseConfigFileForStaker(
-            string memory input
+        string memory input
     ) public returns (Staker[] memory, address[] memory) {
         string memory avsConfig = readInput(input);
 
         /* getting the staker private keys and address */
         Staker[] memory stakers;
-        uint256[] memory stakerPrivateKeys = stdJson.readUintArray(avsConfig, ".stakerPrivateKeys");
+        uint256[] memory stakerPrivateKeys = stdJson.readUintArray(
+            avsConfig,
+            ".stakerPrivateKeys"
+        );
         stakers = getStakersFromPrivateKeysAndAddr(stakerPrivateKeys);
-
 
         /* getting the stake amount in different strategies */
         // stakerTokenAmount[i][j] is the amount of token i that staker j will receive
@@ -87,7 +75,9 @@ contract PlaygroundAVSConfigParser is Script, DSTest {
             (uint256[][])
         );
         // address[] memory strategies = stdJson.readAddressArray(avsConfig, ".strategies");
-        uint numstrategies = stdJson.readAddressArray(avsConfig, ".strategies").length;
+        uint numstrategies = stdJson
+            .readAddressArray(avsConfig, ".strategies")
+            .length;
         for (uint j = 0; j < stakers.length; j++) {
             uint256[] memory stake = new uint256[](numstrategies);
             for (uint i = 0; i < numstrategies; i++) {
@@ -95,7 +85,6 @@ contract PlaygroundAVSConfigParser is Script, DSTest {
             }
             stakers[j].stakeAllocated = stake;
         }
-
 
         /* getting the strategy contracts */
         // StrategyBase[] memory strategyContracts = new StrategyBase[](numstrategies);
@@ -110,7 +99,6 @@ contract PlaygroundAVSConfigParser is Script, DSTest {
         return (stakers, strategyContractsAddresses);
     }
 
-
     function parseConfigFile(
         string memory input
     ) public returns (Contracts memory, Operator[] memory) {
@@ -121,14 +109,15 @@ contract PlaygroundAVSConfigParser is Script, DSTest {
             avsConfig,
             ".playgroundAVSStrategyManagerV1"
         );
-        address dummyTokenStrat = stdJson.readAddress(
+        address[] memory dummyTokenStrats = stdJson.readAddressArray(
             avsConfig,
-            ".strategies[0]"
+            ".strategies"
         );
         Contracts memory contracts = getContracts(
             playgroundAVSStrategyManagerV1,
-            dummyTokenStrat
+            dummyTokenStrats[0]
         );
+        emit log_address(dummyTokenStrats[0]);
 
         // parse operators
         uint256[] memory operatorPrivateKeys = stdJson.readUintArray(
@@ -155,7 +144,6 @@ contract PlaygroundAVSConfigParser is Script, DSTest {
 
         return (contracts, operators);
     }
-
 
     function getStakersFromPrivateKeysAndAddr(
         uint256[] memory stakerPrivateKeys
