@@ -33,6 +33,7 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
     }
     struct Contracts {
         Eigenlayer eigenlayer;
+        // TODO: change this to array format
         Tokens tokens;
         PlaygroundAVS playgroundAVS;
     }
@@ -40,6 +41,7 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
         IDelegationManager delegationManager;
         IStrategyManager strategyManager;
         ISlasher slasher;
+        // TODO: change this to array format
         StrategyBase dummyTokenStrat;
     }
     struct Tokens {
@@ -51,8 +53,9 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
     }
 
     function parseStakersFromConfigFile(
-        string memory input
-    ) public returns (Staker[] memory, address[] memory) {
+        string memory input,
+        uint numstrategies
+    ) public returns (Staker[] memory) {
         string memory avsConfig = readInput(input);
 
         /* getting the staker private keys and address */
@@ -75,9 +78,9 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
             (uint256[][])
         );
         // address[] memory strategies = stdJson.readAddressArray(avsConfig, ".strategies");
-        uint numstrategies = stdJson
-            .readAddressArray(avsConfig, ".strategies")
-            .length;
+        // uint numstrategies = stdJson
+        //     .readAddressArray(avsConfig, ".strategies")
+        //     .length;
         for (uint j = 0; j < stakers.length; j++) {
             uint256[] memory stake = new uint256[](numstrategies);
             for (uint i = 0; i < numstrategies; i++) {
@@ -88,15 +91,15 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
 
         /* getting the strategy contracts */
         // StrategyBase[] memory strategyContracts = new StrategyBase[](numstrategies);
-        address[] memory strategyContractsAddresses = stdJson.readAddressArray(
-            avsConfig,
-            ".strategies"
-        );
+        // address[] memory strategyContractsAddresses = stdJson.readAddressArray(
+        //     avsConfig,
+        //     ".strategies"
+        // );
         // for (uint i = 0; i < numstrategies; i++) {
         //     strategyContracts[i] = StrategyBase(strategyContractsAddresses[i]);
         // }
 
-        return (stakers, strategyContractsAddresses);
+        return stakers;
     }
 
     function parseContractsFromDeploymentOutputFiles(

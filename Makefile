@@ -20,3 +20,9 @@ ___STATUS_PRINTERS___: ##
 
 print-operators-status: ## Print status of all operators from config file playground_avs_input.json
 	forge script script/playbooks/Operators.s.sol --sig "printStatusOfOperatorsFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} playground_avs_input
+
+
+
+__STAKER_INTERACTIONS__: ##
+setup-stakers-and-delegate-to-operator: ## Allocate tokens to stakers from config file playground_avs_input.json and do delegations of stakers to operators
+	forge script script/playbooks/Stakers.s.sol --sig "allocateTokensToStakersAndDelegateToOperator(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input
