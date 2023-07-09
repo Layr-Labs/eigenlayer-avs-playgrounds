@@ -68,7 +68,7 @@ contract PlaygroundAVSDeployer is Script, Utils {
         address playgroundAVSCommunityMultisig = msg.sender;
         address playgroundAVSPauser = msg.sender;
 
-        // vm.startBroadcast();
+        vm.startBroadcast();
         _deployPlaygroundAVSContracts(
             strategyManager,
             delegationManager,
@@ -77,8 +77,7 @@ contract PlaygroundAVSDeployer is Script, Utils {
             playgroundAVSCommunityMultisig,
             playgroundAVSPauser
         );
-
-        // vm.stopBroadcast();
+        vm.stopBroadcast();
     }
 
     function _deployPlaygroundAVSContracts(
@@ -286,10 +285,15 @@ contract PlaygroundAVSDeployer is Script, Utils {
             "blsOperatorStateRetriever",
             address(blsOperatorStateRetriever)
         );
-        string memory deployed_addresses_output = vm.serializeAddress(
+        vm.serializeAddress(
             deployed_addresses,
             "playgroundAVSServiceManager",
             address(playgroundAVSServiceManagerV1)
+        );
+        string memory deployed_addresses_output = vm.serializeAddress(
+            deployed_addresses,
+            "playgroundAVSServiceManagerV1Implementation",
+            address(PlaygroundAVSServiceManagerV1Implementation)
         );
 
         // serialize all the data

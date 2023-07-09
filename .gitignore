@@ -15,4 +15,4 @@ docs/
 
 # forge dependencies (submodules)
 lib/**
-script/output/**
+script/output/**/*.json

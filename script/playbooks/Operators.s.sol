@@ -4,14 +4,19 @@ pragma solidity =0.8.12;
 import "../utils/PlaygroundAVSConfigParser.sol";
 
 contract Operators is Script, PlaygroundAVSConfigParser {
-    // default forge script entrypoint. Run with
-    // forge script script/playbooks/Operators.s.sol --sig "run(string memory input)" --rpc-url $RPC_URL playground_avs_input --broadcast
-    function run(string memory input) external {
-        Contracts memory contracts;
-        Operator[] memory operators;
-        (contracts, operators) = parseConfigFile(input);
+    function registerOperatorsWithEigenlayerAndAvsFromConfigFile(
+        string memory avsConfigFile
+    ) external {
+        Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
+            "eigenlayer_deployment_output",
+            "playground_avs_deployment_output"
+        );
 
-        // registerOperatorsWithEigenlayer(operators, contracts);
+        Operator[] memory operators = parseOperatorsFromConfigFile(
+            avsConfigFile
+        );
+
+        registerOperatorsWithEigenlayer(operators, contracts);
         registerOperatorsWithPlaygroundAVS(operators, contracts);
     }
 
@@ -48,5 +53,73 @@ contract Operators is Script, PlaygroundAVSConfigParser {
                     registrationData
                 );
         }
+    }
+
+    // STATUS PRINTER FUNCTIONS
+
+    function printStatusOfOperatorsFromConfigFile(
+        string memory avsConfigFile
+    ) external {
+        Operator[] memory operators = parseOperatorsFromConfigFile(
+            avsConfigFile
+        );
+
+        for (uint256 i = 0; i < operators.length; i++) {
+            emit log_named_uint("PRINTING STATUS OF OPERATOR", i);
+            printOperatorStatus(operators[i].addr);
+            emit log("--------------------------------------------------");
+        }
+    }
+
+    function printOperatorStatus(address operatorAddr) public {
+        Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
+            "eigenlayer_deployment_output",
+            "playground_avs_deployment_output"
+        );
+        emit log_named_address("operator address", operatorAddr);
+        emit log_named_uint(
+            "dummy token balance",
+            contracts.tokens.dummyToken.balanceOf(operatorAddr)
+        );
+        bool isEigenlayerOperator = contracts
+            .eigenlayer
+            .delegationManager
+            .isOperator(operatorAddr);
+        emit log_named_string(
+            "operator is opted in to eigenlayer",
+            convertBoolToString(isEigenlayerOperator)
+        );
+        bool canBeSlashedByPlaygroundAVS = contracts
+            .eigenlayer
+            .slasher
+            .canSlash(
+                operatorAddr,
+                address(contracts.playgroundAVS.serviceManager)
+            );
+        emit log_named_string(
+            "operator is opted in to playgroundAVS (aka can be slashed)",
+            convertBoolToString(canBeSlashedByPlaygroundAVS)
+        );
+        IRegistryCoordinator.Operator memory operatorFromRegistry = contracts
+            .playgroundAVS
+            .registryCoordinator
+            .getOperator(operatorAddr);
+        emit log_named_bytes32(
+            "operatorId from registry",
+            operatorFromRegistry.operatorId
+        );
+        emit log_named_uint(
+            "operator fromTaskNumber from registry",
+            operatorFromRegistry.fromTaskNumber
+        );
+        emit log_named_string(
+            "operator status from registry",
+            convertOperatorStatusToString(operatorFromRegistry.status)
+        );
+        bool isFrozen = contracts.eigenlayer.slasher.isFrozen(operatorAddr);
+        emit log_named_string(
+            "operator is frozen",
+            convertBoolToString(isFrozen)
+        );
     }
 }

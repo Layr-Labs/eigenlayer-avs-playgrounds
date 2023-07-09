@@ -50,7 +50,7 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
         IRegistryCoordinator registryCoordinator;
     }
 
-    function parseConfigFileForStaker(
+    function parseStakersFromConfigFile(
         string memory input
     ) public returns (Staker[] memory, address[] memory) {
         string memory avsConfig = readInput(input);
@@ -99,27 +99,38 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
         return (stakers, strategyContractsAddresses);
     }
 
-    function parseConfigFile(
-        string memory input
-    ) public returns (Contracts memory, Operator[] memory) {
-        string memory avsConfig = readInput(input);
+    function parseContractsFromDeploymentOutputFiles(
+        string memory eigenlayerDeploymentOutputFile,
+        string memory avsDeploymentOutputFile
+    ) public returns (Contracts memory) {
+        string memory eigenlayerDeploymentOutput = readOutput(
+            eigenlayerDeploymentOutputFile
+        );
+        string memory avsDeploymentOutput = readOutput(avsDeploymentOutputFile);
+
+        address playgroundAVSStrategyManagerV1 = stdJson.readAddress(
+            avsDeploymentOutput,
+            ".addresses.playgroundAVSServiceManager"
+        );
+        address tokenStrat = stdJson.readAddress(
+            eigenlayerDeploymentOutput,
+            ".addresses.baseStrategy"
+        );
+        Contracts memory contracts = getContractsFromServiceManager(
+            playgroundAVSStrategyManagerV1,
+            tokenStrat
+        );
+
+        return contracts;
+    }
+
+    function parseOperatorsFromConfigFile(
+        string memory configFileName
+    ) public returns (Operator[] memory) {
+        string memory avsConfig = readInput(configFileName);
 
         // parse contracts
-        address playgroundAVSStrategyManagerV1 = stdJson.readAddress(
-            avsConfig,
-            ".playgroundAVSStrategyManagerV1"
-        );
-        address[] memory dummyTokenStrats = stdJson.readAddressArray(
-            avsConfig,
-            ".strategies"
-        );
-        Contracts memory contracts = getContracts(
-            playgroundAVSStrategyManagerV1,
-            dummyTokenStrats[0]
-        );
-        emit log_address(dummyTokenStrats[0]);
 
-        // parse operators
         uint256[] memory operatorPrivateKeys = stdJson.readUintArray(
             avsConfig,
             ".operatorPrivateKeys"
@@ -142,7 +153,7 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
             );
         }
 
-        return (contracts, operators);
+        return operators;
     }
 
     function getStakersFromPrivateKeysAndAddr(
@@ -165,7 +176,7 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
         }
     }
 
-    function getContracts(
+    function getContractsFromServiceManager(
         address playgroundAVSServiceManagerV1,
         address dummyTokenStrat
     ) internal view returns (Contracts memory contracts) {

@@ -1,8 +1,4 @@
 {
-    "stakerPrivateKeys": [
-        "0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97",
-        "0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6"
-    ],
     "operatorPrivateKeys": [
         "0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97",
         "0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6"
@@ -17,13 +13,9 @@
             2
         ]
     ],
-    "playgroundAVSStrategyManagerV1": "0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690",
-    "tokens": [
-        "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-        "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
-    ],
-    "strategies": [
-        "0x51A1ceB83B83F1985a81C295d1fF28Afef186E02"
+    "stakerPrivateKeys": [
+        "0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97",
+        "0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6"
     ],
     "stake": [
         [
