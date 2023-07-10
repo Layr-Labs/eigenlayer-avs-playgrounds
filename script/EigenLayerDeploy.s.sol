@@ -90,18 +90,13 @@ contract EigenLayerDeploy is Script, Test, Utils {
     uint32 STRATEGY_MANAGER_INIT_WITHDRAWAL_DELAY_BLOCKS;
     uint32 DELAYED_WITHDRAWAL_ROUTER_INIT_WITHDRAWAL_DELAY_BLOCKS;
 
-    string public deployConfigPath = string(bytes("script/EigenLayerDeployConfigGoerli.json"));
-
     function run() external {
         // read and log the chainID
         uint256 chainId = block.chainid;
         emit log_named_uint("You are deploying on ChainID", chainId);
 
         // READ JSON CONFIG DATA
-        // string memory config_data = readInput("eigenlayer_deployment_input");
-        // bytes memory parsedData = vm.parseJson(config_data);
-
-        string memory config_data = vm.readFile(deployConfigPath);
+        string memory config_data = readInput("eigenlayer_deployment_input");
 
         STRATEGY_MANAGER_INIT_PAUSED_STATUS = stdJson.readUint(
             config_data,
@@ -373,14 +368,14 @@ contract EigenLayerDeploy is Script, Test, Utils {
         // STOP RECORDING TRANSACTIONS FOR DEPLOYMENT
         vm.stopBroadcast();
 
-        // FIXME: @sidu how should we do this properly?
-        //        currently just changed operationsMultisig to be default anvil unlocked account
-        //        instead of the actual operationsMultisig you created
-        vm.startBroadcast(alphaMultisig);
-        IStrategy[] memory strategies = new IStrategy[](1);
-        strategies[0] = baseStrategy;
-        strategyManager.addStrategiesToDepositWhitelist(strategies);
-        vm.stopBroadcast();
+        // TODO: this doesn't work because we don't hold the private key to the alphaMultisig (its a contract anyways)
+        //       so we need to deploy on goerli, whitelist the strategies using the gnosis safe UI, and then fork goerli on anvil
+        //       another option to test everything locally would be to set the alphaMultisig to be some EOA wallet we control
+        // vm.startBroadcast(alphaMultisig);
+        // IStrategy[] memory strategies = new IStrategy[](1);
+        // strategies[0] = baseStrategy;
+        // strategyManager.addStrategiesToDepositWhitelist(strategies);
+        // vm.stopBroadcast();
 
         // CHECK CORRECTNESS OF DEPLOYMENT
         _verifyContractsPointAtOneAnother(
@@ -494,8 +489,12 @@ contract EigenLayerDeploy is Script, Test, Utils {
         );
 
         string memory parameters = "parameters";
-        
-        string memory parameters_output = vm.serializeAddress(parameters, "alphaMultisig", alphaMultisig);
+
+        string memory parameters_output = vm.serializeAddress(
+            parameters,
+            "alphaMultisig",
+            alphaMultisig
+        );
 
         string memory chain_info = "chainInfo";
         vm.serializeUint(chain_info, "deploymentBlock", block.number);
@@ -517,7 +516,8 @@ contract EigenLayerDeploy is Script, Test, Utils {
             parameters,
             parameters_output
         );
-        vm.writeJson(finalJson, "script/output/M1_deployment_data.json");
+        writeOutput(finalJson, "eigenlayer_deployment_output");
+        // vm.writeJson(finalJson, "script/output/M1_deployment_data.json");
     }
 
     function _verifyContractsPointAtOneAnother(
@@ -683,7 +683,6 @@ contract EigenLayerDeploy is Script, Test, Utils {
             "delayedWithdrawalRouter: pauser registry not set correctly"
         );
 
-       
         require(
             eigenLayerPauserReg.isPauser(alphaMultisig),
             "pauserRegistry: alphaMultisig is not pauser"
