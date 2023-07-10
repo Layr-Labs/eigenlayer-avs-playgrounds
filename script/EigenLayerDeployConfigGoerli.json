@@ -1,6 +1,6 @@
 {
     "multisig_addresses": {
-         "alphaMultisig": "0x95C7A3F90e80329C97A6493142Ab7923E15b8083",
+         "alphaMultisig": "0x95C7A3F90e80329C97A6493142Ab7923E15b8083"
     },
     "strategyManager":
          {
