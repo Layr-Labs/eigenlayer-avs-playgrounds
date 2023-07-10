@@ -68,9 +68,7 @@ contract EigenLayerDeploy is Script, Test, Utils {
 
     EmptyContract public emptyContract;
 
-    address executorMultisig;
-    address operationsMultisig;
-    address pauserMultisig;
+    address alphaMultisig;
 
     // the ETH2 deposit contract -- if not on mainnet, we deploy a mock as stand-in
     IETHPOSDeposit public ethPOSDeposit;
@@ -147,18 +145,11 @@ contract EigenLayerDeploy is Script, Test, Utils {
         // tokens to deploy strategies for
         StrategyConfig[] memory strategyConfigs;
 
-        executorMultisig = stdJson.readAddress(
+        alphaMultisig = stdJson.readAddress(
             config_data,
-            ".multisig_addresses.executorMultisig"
+            ".multisig_addresses.alphaMultisig"
         );
-        operationsMultisig = stdJson.readAddress(
-            config_data,
-            ".multisig_addresses.operationsMultisig"
-        );
-        pauserMultisig = stdJson.readAddress(
-            config_data,
-            ".multisig_addresses.pauserMultisig"
-        );
+
         // load token list
         bytes memory strategyConfigsRaw = stdJson.parseRaw(
             config_data,
@@ -167,12 +158,8 @@ contract EigenLayerDeploy is Script, Test, Utils {
         strategyConfigs = abi.decode(strategyConfigsRaw, (StrategyConfig[]));
 
         require(
-            executorMultisig != address(0),
-            "executorMultisig address not configured correctly!"
-        );
-        require(
-            operationsMultisig != address(0),
-            "operationsMultisig address not configured correctly!"
+            alphaMultisig != address(0),
+            "alphaMultisig address not configured correctly!"
         );
 
         // START RECORDING TRANSACTIONS FOR DEPLOYMENT
@@ -183,11 +170,9 @@ contract EigenLayerDeploy is Script, Test, Utils {
 
         //deploy pauser registry
         {
-            address[] memory pausers = new address[](3);
-            pausers[0] = executorMultisig;
-            pausers[1] = operationsMultisig;
-            pausers[2] = pauserMultisig;
-            eigenLayerPauserReg = new PauserRegistry(pausers, executorMultisig);
+            address[] memory pausers = new address[](1);
+            pausers[0] = alphaMultisig;
+            eigenLayerPauserReg = new PauserRegistry(pausers, alphaMultisig);
         }
 
         /**
@@ -288,7 +273,7 @@ contract EigenLayerDeploy is Script, Test, Utils {
             address(delegationImplementation),
             abi.encodeWithSelector(
                 DelegationManager.initialize.selector,
-                executorMultisig,
+                alphaMultisig,
                 eigenLayerPauserReg,
                 DELEGATION_INIT_PAUSED_STATUS
             )
@@ -298,8 +283,8 @@ contract EigenLayerDeploy is Script, Test, Utils {
             address(strategyManagerImplementation),
             abi.encodeWithSelector(
                 StrategyManager.initialize.selector,
-                executorMultisig,
-                operationsMultisig,
+                alphaMultisig,
+                alphaMultisig,
                 eigenLayerPauserReg,
                 STRATEGY_MANAGER_INIT_PAUSED_STATUS,
                 STRATEGY_MANAGER_INIT_WITHDRAWAL_DELAY_BLOCKS
@@ -310,7 +295,7 @@ contract EigenLayerDeploy is Script, Test, Utils {
             address(slasherImplementation),
             abi.encodeWithSelector(
                 Slasher.initialize.selector,
-                executorMultisig,
+                alphaMultisig,
                 eigenLayerPauserReg,
                 SLASHER_INIT_PAUSED_STATUS
             )
@@ -322,7 +307,7 @@ contract EigenLayerDeploy is Script, Test, Utils {
                 EigenPodManager.initialize.selector,
                 EIGENPOD_MANAGER_MAX_PODS,
                 IBeaconChainOracle(address(0)),
-                executorMultisig,
+                alphaMultisig,
                 eigenLayerPauserReg,
                 EIGENPOD_MANAGER_INIT_PAUSED_STATUS
             )
@@ -334,7 +319,7 @@ contract EigenLayerDeploy is Script, Test, Utils {
             address(delayedWithdrawalRouterImplementation),
             abi.encodeWithSelector(
                 DelayedWithdrawalRouter.initialize.selector,
-                executorMultisig,
+                alphaMultisig,
                 eigenLayerPauserReg,
                 DELAYED_WITHDRAWAL_ROUTER_INIT_PAUSED_STATUS,
                 DELAYED_WITHDRAWAL_ROUTER_INIT_WITHDRAWAL_DELAY_BLOCKS
@@ -358,7 +343,7 @@ contract EigenLayerDeploy is Script, Test, Utils {
         //         EigenPodManager.initialize.selector,
         //         EIGENPOD_MANAGER_MAX_PODS,
         //         IBeaconChainOracle(address(0)),
-        //         executorMultisig,
+        //         alphaMultisig,
         //         eigenLayerPauserReg,
         //         EIGENPOD_MANAGER_INIT_PAUSED_STATUS
         //     )
@@ -378,8 +363,8 @@ contract EigenLayerDeploy is Script, Test, Utils {
             )
         );
 
-        eigenLayerProxyAdmin.transferOwnership(executorMultisig);
-        eigenPodBeacon.transferOwnership(executorMultisig);
+        eigenLayerProxyAdmin.transferOwnership(alphaMultisig);
+        eigenPodBeacon.transferOwnership(alphaMultisig);
 
         // STOP RECORDING TRANSACTIONS FOR DEPLOYMENT
         vm.stopBroadcast();
@@ -387,7 +372,7 @@ contract EigenLayerDeploy is Script, Test, Utils {
         // FIXME: @sidu how should we do this properly?
         //        currently just changed operationsMultisig to be default anvil unlocked account
         //        instead of the actual operationsMultisig you created
-        vm.startBroadcast(operationsMultisig);
+        vm.startBroadcast(alphaMultisig);
         IStrategy[] memory strategies = new IStrategy[](1);
         strategies[0] = baseStrategy;
         strategyManager.addStrategiesToDepositWhitelist(strategies);
@@ -505,12 +490,8 @@ contract EigenLayerDeploy is Script, Test, Utils {
         );
 
         string memory parameters = "parameters";
-        vm.serializeAddress(parameters, "executorMultisig", executorMultisig);
-        string memory parameters_output = vm.serializeAddress(
-            parameters,
-            "operationsMultisig",
-            operationsMultisig
-        );
+        
+        string memory parameters_output = vm.serializeAddress(parameters, "alphaMultisig", alphaMultisig);
 
         string memory chain_info = "chainInfo";
         vm.serializeUint(chain_info, "deploymentBlock", block.number);
@@ -646,32 +627,32 @@ contract EigenLayerDeploy is Script, Test, Utils {
 
     function _verifyInitialOwners() internal view {
         require(
-            strategyManager.owner() == executorMultisig,
+            strategyManager.owner() == alphaMultisig,
             "strategyManager: owner not set correctly"
         );
         require(
-            delegation.owner() == executorMultisig,
+            delegation.owner() == alphaMultisig,
             "delegation: owner not set correctly"
         );
         require(
-            slasher.owner() == executorMultisig,
+            slasher.owner() == alphaMultisig,
             "slasher: owner not set correctly"
         );
         require(
-            eigenPodManager.owner() == executorMultisig,
+            eigenPodManager.owner() == alphaMultisig,
             "delegation: owner not set correctly"
         );
 
         require(
-            eigenLayerProxyAdmin.owner() == executorMultisig,
+            eigenLayerProxyAdmin.owner() == alphaMultisig,
             "eigenLayerProxyAdmin: owner not set correctly"
         );
         require(
-            eigenPodBeacon.owner() == executorMultisig,
+            eigenPodBeacon.owner() == alphaMultisig,
             "eigenPodBeacon: owner not set correctly"
         );
         require(
-            delayedWithdrawalRouter.owner() == executorMultisig,
+            delayedWithdrawalRouter.owner() == alphaMultisig,
             "delayedWithdrawalRouter: owner not set correctly"
         );
     }
@@ -698,20 +679,14 @@ contract EigenLayerDeploy is Script, Test, Utils {
             "delayedWithdrawalRouter: pauser registry not set correctly"
         );
 
+       
         require(
-            eigenLayerPauserReg.isPauser(operationsMultisig),
-            "pauserRegistry: operationsMultisig is not pauser"
+            eigenLayerPauserReg.isPauser(alphaMultisig),
+            "pauserRegistry: alphaMultisig is not pauser"
         );
+
         require(
-            eigenLayerPauserReg.isPauser(executorMultisig),
-            "pauserRegistry: executorMultisig is not pauser"
-        );
-        require(
-            eigenLayerPauserReg.isPauser(pauserMultisig),
-            "pauserRegistry: pauserMultisig is not pauser"
-        );
-        require(
-            eigenLayerPauserReg.unpauser() == executorMultisig,
+            eigenLayerPauserReg.unpauser() == alphaMultisig,
             "pauserRegistry: unpauser not set correctly"
         );
 
@@ -771,7 +746,7 @@ contract EigenLayerDeploy is Script, Test, Utils {
         );
 
         require(
-            strategyManager.strategyWhitelister() == operationsMultisig,
+            strategyManager.strategyWhitelister() == alphaMultisig,
             "strategyManager: strategyWhitelister address not set correctly"
         );
 
