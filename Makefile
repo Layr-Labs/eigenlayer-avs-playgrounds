@@ -13,7 +13,7 @@ endif
 
 ___CONTRACTS_DEPLOYMENT___: ## 
 deploy-eigenlayer: ## Deploy eigenlayer
-	forge script script/EigenLayerDeploy.s.sol --rpc-url ${RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast -vvvv
+	forge script script/EigenLayerDeploy.s.sol --rpc-url ${RPC_URL}  --private-key ${PRIVATE_KEY} -vvvv
 
 deploy-avs: ## Deploy avs
 	forge script script/PlaygroundAVSDeployer.s.sol --rpc-url ${RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast -vvvv
@@ -26,7 +26,7 @@ register-operators-with-eigenlayer-and-avs: ## Register operators from config fi
 ___STATUS_PRINTERS___: ## 
 
 print-operators-status: ## Print status of all operators from config file playground_avs_input.json
-	forge script script/playbooks/Operators.s.sol --sig "printStatusOfOperatorsFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} playground_avs_input
+	forge script script/playbooks/Operators.s.sol --sig "printStatusOfOperatorsFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} playground_avs_input --etherscan-api-key ${ETHERSCAN_API_KEY} --verify
 
 
 
