@@ -20,8 +20,14 @@ deploy-avs: ## Deploy avs
 
 ___OPERATOR_INTERACTIONS___: ## 
 
+register-operators-with-eigenlayer: ## Register operators with eigenlayer from config file playground_avs_input.json
+	forge script script/playbooks/Operators.s.sol --sig "registerOperatorsWithEigenlayerFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input
+
+register-operators-with-avs: ## Register operators with playground-avs from config file playground_avs_input.json
+	forge script script/playbooks/Operators.s.sol --sig "registerOperatorsWithPlaygroundAVSFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input
+
 register-operators-with-eigenlayer-and-avs: ## Register operators from config file playground_avs_input.json
-	forge script script/playbooks/Operators.s.sol --sig "registerOperatorsWithEigenlayerAndAvsFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} playground_avs_input
+	forge script script/playbooks/Operators.s.sol --sig "registerOperatorsWithEigenlayerAndAvsFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input
 
 ___STATUS_PRINTERS___: ## 
 

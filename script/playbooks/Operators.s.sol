@@ -7,6 +7,13 @@ contract Operators is Script, PlaygroundAVSConfigParser {
     function registerOperatorsWithEigenlayerAndAvsFromConfigFile(
         string memory avsConfigFile
     ) external {
+        registerOperatorsWithEigenlayerFromConfigFile(avsConfigFile);
+        registerOperatorsWithPlaygroundAVSFromConfigFile(avsConfigFile);
+    }
+
+    function registerOperatorsWithEigenlayerFromConfigFile(
+        string memory avsConfigFile
+    ) public {
         Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
             "eigenlayer_deployment_output",
             "playground_avs_deployment_output"
@@ -17,6 +24,20 @@ contract Operators is Script, PlaygroundAVSConfigParser {
         );
 
         registerOperatorsWithEigenlayer(operators, contracts);
+    }
+
+    function registerOperatorsWithPlaygroundAVSFromConfigFile(
+        string memory avsConfigFile
+    ) public {
+        Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
+            "eigenlayer_deployment_output",
+            "playground_avs_deployment_output"
+        );
+
+        Operator[] memory operators = parseOperatorsFromConfigFile(
+            avsConfigFile
+        );
+
         registerOperatorsWithPlaygroundAVS(operators, contracts);
     }
 
@@ -36,7 +57,6 @@ contract Operators is Script, PlaygroundAVSConfigParser {
         Operator[] memory operators,
         Contracts memory contracts
     ) public {
-        // TODO: we first need to call slasher.optIntoSlashing()
         bytes memory quorumNumbers = abi.encodePacked(uint256(1));
         string memory socket = "whatIsThis?";
         for (uint256 i = 0; i < operators.length; i++) {
@@ -45,6 +65,10 @@ contract Operators is Script, PlaygroundAVSConfigParser {
                 socket
             );
             vm.broadcast(operators[i].privateKey);
+            // TODO: we first need to call slasher.optIntoSlashing()
+            contracts.eigenlayer.slasher.optIntoSlashing(
+                address(contracts.playgroundAVS.serviceManager)
+            );
             contracts
                 .playgroundAVS
                 .registryCoordinator

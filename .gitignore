@@ -4,8 +4,9 @@ out/
 
 # Ignores development broadcast logs
 !/broadcast
-/broadcast/*/31337/
-/broadcast/**/dry-run/
+/broadcast/**
+!/broadcast/EigenLayerDeploy.s.sol/5/**
+!/broadcast/PlaygroundAVSDeployer.s.sol/5/**
 
 # Docs
 docs/
