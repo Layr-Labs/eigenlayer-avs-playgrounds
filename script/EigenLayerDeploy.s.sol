@@ -90,14 +90,18 @@ contract EigenLayerDeploy is Script, Test, Utils {
     uint32 STRATEGY_MANAGER_INIT_WITHDRAWAL_DELAY_BLOCKS;
     uint32 DELAYED_WITHDRAWAL_ROUTER_INIT_WITHDRAWAL_DELAY_BLOCKS;
 
+    string public deployConfigPath = string(bytes("script/EigenLayerDeployConfigGoerli.json"));
+
     function run() external {
         // read and log the chainID
         uint256 chainId = block.chainid;
         emit log_named_uint("You are deploying on ChainID", chainId);
 
         // READ JSON CONFIG DATA
-        string memory config_data = readInput("eigenlayer_deployment_input");
+        // string memory config_data = readInput("eigenlayer_deployment_input");
         // bytes memory parsedData = vm.parseJson(config_data);
+
+        string memory config_data = vm.readFile(deployConfigPath);
 
         STRATEGY_MANAGER_INIT_PAUSED_STATUS = stdJson.readUint(
             config_data,
@@ -513,7 +517,7 @@ contract EigenLayerDeploy is Script, Test, Utils {
             parameters,
             parameters_output
         );
-        writeOutput(finalJson, "eigenlayer_deployment_output");
+        vm.writeJson(finalJson, "script/output/M1_deployment_data.json");
     }
 
     function _verifyContractsPointAtOneAnother(
@@ -714,11 +718,11 @@ contract EigenLayerDeploy is Script, Test, Utils {
             "strategyManager: init paused status set incorrectly"
         );
         require(
-            slasher.paused() == type(uint256).max,
+            slasher.paused() == 0,
             "slasher: init paused status set incorrectly"
         );
         require(
-            delegation.paused() == type(uint256).max,
+            delegation.paused() == 0,
             "delegation: init paused status set incorrectly"
         );
         require(
