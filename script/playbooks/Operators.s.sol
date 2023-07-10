@@ -57,15 +57,14 @@ contract Operators is Script, PlaygroundAVSConfigParser {
         Operator[] memory operators,
         Contracts memory contracts
     ) public {
-        bytes memory quorumNumbers = abi.encodePacked(uint256(1));
+        bytes memory quorumNumbers = new bytes(1);
         string memory socket = "whatIsThis?";
         for (uint256 i = 0; i < operators.length; i++) {
             bytes memory registrationData = abi.encode(
                 operators[i].blsPubKey,
                 socket
             );
-            vm.broadcast(operators[i].privateKey);
-            // TODO: we first need to call slasher.optIntoSlashing()
+            vm.startBroadcast(operators[i].privateKey);
             contracts.eigenlayer.slasher.optIntoSlashing(
                 address(contracts.playgroundAVS.serviceManager)
             );
@@ -76,6 +75,7 @@ contract Operators is Script, PlaygroundAVSConfigParser {
                     quorumNumbers,
                     registrationData
                 );
+            vm.stopBroadcast();
         }
     }
 
