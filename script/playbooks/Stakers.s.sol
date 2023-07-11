@@ -34,7 +34,7 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         Operator[] memory operators = parseOperatorsFromConfigFile(avsConfigFile);
 
         // stakers delegating to the operators
-        delgateToOperators(stakers, operators, contracts);
+        // delgateToOperators(stakers, operators, contracts);
     }
 
 
