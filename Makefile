@@ -31,10 +31,14 @@ register-operators-with-eigenlayer-and-avs: ## Register operators from config fi
 
 
 
-__STAKER_INTERACTIONS__: ##
+__STAKER_DELEGATION__: ##
 setup-stakers-and-delegate-to-operator: ## Allocate tokens to stakers from config file playground_avs_input.json and do delegations of stakers to operators
 	forge script script/playbooks/Stakers.s.sol --sig "allocateTokensToStakersAndDelegateToOperator(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input
 
+
+__STAKER_QUEUE_WITHDRAWAL__: ##
+staker-queue-withdrawal: ## Queue withdrawals from the staker in EigenLayer
+	forge script script/playbooks/Stakers.s.sol --sig "queueWithdrawalFromEigenLayer(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input
 
 ___STATUS_PRINTERS___: ## 
 

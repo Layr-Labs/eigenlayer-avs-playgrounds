@@ -34,16 +34,62 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         Operator[] memory operators = parseOperatorsFromConfigFile(avsConfigFile);
 
         // stakers delegating to the operators
-        // delgateToOperators(stakers, operators, contracts);
+        delgateToOperators(stakers, operators, contracts);
     }
 
 
-    // function  unstakeFromEigen(
-    //     string memory avsConfigFile
-    // ) external {
-    //     // queue withdrawal from EigenLayer
+    function  queueWithdrawalFromEigenLayer(
+        string memory avsConfigFile
+    ) external {
 
-    // }
+        Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
+            "eigenlayer_deployment_output",
+            "playground_avs_deployment_output"
+        );
+
+
+        /* parsing avsConfigFile for info on stakers that are currently restaked in EigenLayer */
+        Staker[] memory stakersCurrentlyRestakedOnEigenLayer;
+        // we are setting number of strategies to 1
+        // TODO: change 1 to length of the dummyTokenStrat field in EigenLayer struct after array format is adopted 
+        stakersCurrentlyRestakedOnEigenLayer = parseStakersFromConfigFile(avsConfigFile, 1);
+        emit log_address(stakersCurrentlyRestakedOnEigenLayer[0].addr);
+
+        /* parsing avsConfigFile for stakers that are to be withdrawn */
+        Staker[] memory stakersToBeWithdrawn;
+        /* getting information on which stakers have to be withdrawn from the json file */
+        stakersToBeWithdrawn = parseConfigFileForStakersToBeWithdrawn(
+                                        avsConfigFile, 
+                                        stakersCurrentlyRestakedOnEigenLayer
+                                        );
+
+        emit log_address(stakersToBeWithdrawn[0].addr);
+        
+        queueWithdrawalFromEigenLayer(contracts, stakersToBeWithdrawn);
+        // for (uint i = 0; i < stakersToBeWithdrawn.length; i++) {
+        //     vm.startBroadcast(stakersToBeWithdrawn[i].privateKey);
+
+        //     // get details on the staker's shares and the strategy
+        //     (IStrategy[] memory strategies, uint256[] memory shares) = contracts.eigenlayer.strategyManager.getDeposits(
+        //                     stakersToBeWithdrawn[i].addr
+        //                 );
+
+        //     // queue withdrawal from EigenLayer
+        //     uint256[] memory strategyIndexes = new uint256[](1);
+        //     strategyIndexes[0] = 0;
+        //     bytes32 withdrawalRoot;
+        //     withdrawalRoot = contracts.eigenlayer.strategyManager.queueWithdrawal(
+        //                             strategyIndexes,
+        //                             strategies,
+        //                             shares,
+        //                             stakersToBeWithdrawn[i].addr,
+        //                             true
+        //                         );
+
+        //     vm.stopBroadcast();
+        // }
+
+    }
 
 
     function allocateTokenToStakers(
@@ -114,6 +160,38 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
 
             // staker i is calling delegation manager to delegate its assets to some operator i
             contracts.eigenlayer.delegationManager.delegateTo(operators[i].addr);
+            vm.stopBroadcast();
+        }
+    }
+
+    function queueWithdrawalFromEigenLayer (
+        Contracts memory contracts,
+        Staker[] memory stakersToBeWithdrawn
+    ) public {
+        for (uint i = 0; i < stakersToBeWithdrawn.length; i++) {
+            vm.startBroadcast(stakersToBeWithdrawn[i].privateKey);
+
+            // get details on the staker's shares and the strategy
+            (IStrategy[] memory strategies, uint256[] memory shares) = contracts.eigenlayer.strategyManager.getDeposits(
+                            stakersToBeWithdrawn[i].addr
+                        );
+
+            // queue withdrawal from EigenLayer
+            /* 
+                @todo for now I have hardcoded the index of the strategy to be removed to be 0.
+                But this needs to be passed in the json.
+            */
+            uint256[] memory strategyIndexes = new uint256[](1);
+            strategyIndexes[0] = 0;
+            bytes32 withdrawalRoot;
+            withdrawalRoot = contracts.eigenlayer.strategyManager.queueWithdrawal(
+                                    strategyIndexes,
+                                    strategies,
+                                    shares,
+                                    stakersToBeWithdrawn[i].addr,
+                                    true
+                                );
+
             vm.stopBroadcast();
         }
     }

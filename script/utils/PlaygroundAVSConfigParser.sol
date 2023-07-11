@@ -72,15 +72,12 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
             avsConfig,
             ".stake"
         );
-        // emit log_bytes(stakerTokenAmountsRaw);
+
         uint256[][] memory stakerTokenAmounts = abi.decode(
             stakerTokenAmountsRaw,
             (uint256[][])
         );
-        // address[] memory strategies = stdJson.readAddressArray(avsConfig, ".strategies");
-        // uint numstrategies = stdJson
-        //     .readAddressArray(avsConfig, ".strategies")
-        //     .length;
+ 
         for (uint j = 0; j < stakers.length; j++) {
             uint256[] memory stake = new uint256[](numstrategies);
             for (uint i = 0; i < numstrategies; i++) {
@@ -89,18 +86,40 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
             stakers[j].stakeAllocated = stake;
         }
 
-        /* getting the strategy contracts */
-        // StrategyBase[] memory strategyContracts = new StrategyBase[](numstrategies);
-        // address[] memory strategyContractsAddresses = stdJson.readAddressArray(
-        //     avsConfig,
-        //     ".strategies"
-        // );
-        // for (uint i = 0; i < numstrategies; i++) {
-        //     strategyContracts[i] = StrategyBase(strategyContractsAddresses[i]);
-        // }
-
         return stakers;
     }
+
+    function parseConfigFileForStakersToBeWithdrawn(
+        string memory avsConfigFile,
+        Staker[] memory stakers
+    ) public returns (Staker[] memory) {
+
+        /* getting information on which stakers have to be withdrawn from the json file */
+        // bytes memory indicesOfStakersTobeWithdrawnRaw = stdJson.parseRaw(
+        //     avsConfigFile,
+        //     ".indicesOfstakersToBeUnstaked"
+        // );
+
+        // uint256[] memory indicesOfStakersTobeWithdrawn = abi.decode(
+        //     indicesOfStakersTobeWithdrawnRaw,
+        //     (uint256[])
+        // );
+        
+
+        // /* storing all the relevant info on these stakers to be withdrawn in an array */
+        // Staker[] memory stakersToBeWithdrawn = new Staker[](indicesOfStakersTobeWithdrawn.length);
+        // for(uint i = 0; i < indicesOfStakersTobeWithdrawn.length; i++) {
+        //     stakersToBeWithdrawn[i] = stakers[indicesOfStakersTobeWithdrawn[i]];
+        // }
+
+        // @todo for not just hardcoded, need to get above working
+        Staker[] memory stakersToBeWithdrawn = new Staker[](1);
+        stakersToBeWithdrawn[0] = stakers[0];
+        
+
+        return stakersToBeWithdrawn;
+    }
+
 
     function parseContractsFromDeploymentOutputFiles(
         string memory eigenlayerDeploymentOutputFile,

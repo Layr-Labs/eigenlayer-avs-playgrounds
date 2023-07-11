@@ -1,7 +1,7 @@
 {
   "addresses": {
-    "blsOperatorStateRetriever": "0xE76ab244181205c9f1339E39911393BE39b03B0d",
-    "playgroundAVSServiceManager": "0x8FB61d68F3edA25f84824a235C1C69A5903E173e",
-    "playgroundAVSServiceManagerV1Implementation": "0x740E78C47a4863F1d11bF95310031915e39D03bC"
+    "blsOperatorStateRetriever": "0xDCc667e9A81B4b5B28E37E58dC7c356c1d1fc388",
+    "playgroundAVSServiceManager": "0x4A5391EBeD1244f28FaA3f2A719BD74D1DF24CF0",
+    "playgroundAVSServiceManagerV1Implementation": "0x65b2AE17676A911C5cC96A49237390cE4c66FbAd"
   }
 }
