@@ -290,10 +290,20 @@ contract PlaygroundAVSDeployer is Script, Utils {
             "playgroundAVSServiceManager",
             address(playgroundAVSServiceManagerV1)
         );
-        string memory deployed_addresses_output = vm.serializeAddress(
+        vm.serializeAddress(
             deployed_addresses,
             "playgroundAVSServiceManagerV1Implementation",
             address(PlaygroundAVSServiceManagerV1Implementation)
+        );
+        vm.serializeAddress(
+            deployed_addresses,
+            "registryCoordinator",
+            address(registryCoordinator)
+        );
+        string memory deployed_addresses_output = vm.serializeAddress(
+            deployed_addresses,
+            "registryCoordinatorImplementation",
+            address(registryCoordinatorImplementation)
         );
 
         // serialize all the data

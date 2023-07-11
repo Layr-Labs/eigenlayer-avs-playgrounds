@@ -2,11 +2,12 @@
 cache/
 out/
 
-# Ignores development broadcast logs
-!/broadcast
+# Ignores development broadcast logs and outputs
 /broadcast/**
 !/broadcast/EigenLayerDeploy.s.sol/5/**
-!/broadcast/PlaygroundAVSDeployer.s.sol/5/**
+script/output/31337/*.json
+# we don't share the avs deployments, even on chainid 5, because local forks of goerli have chainid 5
+script/output/**/playground_avs_deployment_output.json
 
 # Docs
 docs/
@@ -16,4 +17,3 @@ docs/
 
 # forge dependencies (submodules)
 lib/**
-script/output/31337/*.json

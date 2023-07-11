@@ -24,19 +24,19 @@ register-operators-with-eigenlayer: ## Register operators with eigenlayer from c
 	forge script script/playbooks/Operators.s.sol --sig "registerOperatorsWithEigenlayerFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input
 
 register-operators-with-avs: ## Register operators with playground-avs from config file playground_avs_input.json
-	forge script script/playbooks/Operators.s.sol --sig "registerOperatorsWithPlaygroundAVSFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input
+	forge script script/playbooks/Operators.s.sol --sig "registerOperatorsWithPlaygroundAVSFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input -vvvv
+
+deregister-operators-with-avs: ## Register operators with playground-avs from config file playground_avs_input.json
+	forge script script/playbooks/Operators.s.sol --sig "deregisterOperatorsWithPlaygroundAVSFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input
 
 register-operators-with-eigenlayer-and-avs: ## Register operators from config file playground_avs_input.json
 	forge script script/playbooks/Operators.s.sol --sig "registerOperatorsWithEigenlayerAndAvsFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input
 
 
-
-__STAKER_DELEGATION__: ##
+__STAKER_INTERACTIONS__: ## 
 setup-stakers-and-delegate-to-operator: ## Allocate tokens to stakers from config file playground_avs_input.json and do delegations of stakers to operators
 	forge script script/playbooks/Stakers.s.sol --sig "allocateTokensToStakersAndDelegateToOperator(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input
 
-
-__STAKER_QUEUE_WITHDRAWAL__: ##
 staker-queue-withdrawal: ## Queue withdrawals from the staker in EigenLayer
 	forge script script/playbooks/Stakers.s.sol --sig "queueWithdrawalFromEigenLayer(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input
 

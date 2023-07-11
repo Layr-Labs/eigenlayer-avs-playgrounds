@@ -4,6 +4,8 @@ pragma solidity =0.8.12;
 import "../utils/PlaygroundAVSConfigParser.sol";
 
 contract Operators is Script, PlaygroundAVSConfigParser {
+    // PUBLIC FUNCTIONS THAT READ FROM CONFIG FILES AND CALL INTERNAL FUNCTIONS
+
     function registerOperatorsWithEigenlayerAndAvsFromConfigFile(
         string memory avsConfigFile
     ) external {
@@ -41,10 +43,27 @@ contract Operators is Script, PlaygroundAVSConfigParser {
         registerOperatorsWithPlaygroundAVS(operators, contracts);
     }
 
+    function deregisterOperatorsWithPlaygroundAVSFromConfigFile(
+        string memory avsConfigFile
+    ) public {
+        Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
+            "eigenlayer_deployment_output",
+            "playground_avs_deployment_output"
+        );
+
+        Operator[] memory operators = parseOperatorsFromConfigFile(
+            avsConfigFile
+        );
+
+        deregisterOperatorsWithPlaygroundAVS(operators, contracts);
+    }
+
+    // FUNCTIONALITY FUNCTIONS
+
     function registerOperatorsWithEigenlayer(
         Operator[] memory operators,
         Contracts memory contracts
-    ) public {
+    ) internal {
         for (uint256 i = 0; i < operators.length; i++) {
             vm.broadcast(operators[i].privateKey);
             contracts.eigenlayer.delegationManager.registerAsOperator(
@@ -56,7 +75,7 @@ contract Operators is Script, PlaygroundAVSConfigParser {
     function registerOperatorsWithPlaygroundAVS(
         Operator[] memory operators,
         Contracts memory contracts
-    ) public {
+    ) internal {
         bytes memory quorumNumbers = new bytes(1);
         string memory socket = "whatIsThis?";
         for (uint256 i = 0; i < operators.length; i++) {
@@ -71,9 +90,38 @@ contract Operators is Script, PlaygroundAVSConfigParser {
             contracts
                 .playgroundAVS
                 .registryCoordinator
+                .blsPubkeyRegistry()
+                .pubkeyCompendium()
+                .contracts
+                .playgroundAVS
+                .registryCoordinator
                 .registerOperatorWithCoordinator(
                     quorumNumbers,
                     registrationData
+                );
+            vm.stopBroadcast();
+        }
+    }
+
+    function deregisterOperatorsWithPlaygroundAVS(
+        Operator[] memory operators,
+        Contracts memory contracts
+    ) internal {
+        bytes memory quorumNumbers = new bytes(1);
+        quorumNumbers[0] = 0x01;
+        // TODO: can we call this fct without specifying operators to swap?
+        bytes32[] memory operatorIdsToSwap = new bytes32[](0);
+        for (uint256 i = 0; i < operators.length; i++) {
+            bytes memory deregistrationData = abi.encode(
+                operators[i].blsPubKey,
+                operatorIdsToSwap
+            );
+            contracts
+                .playgroundAVS
+                .registryCoordinator
+                .deregisterOperatorWithCoordinator(
+                    quorumNumbers,
+                    deregistrationData
                 );
             vm.stopBroadcast();
         }
@@ -128,17 +176,17 @@ contract Operators is Script, PlaygroundAVSConfigParser {
             .playgroundAVS
             .registryCoordinator
             .getOperator(operatorAddr);
+        emit log_named_string(
+            "operator status in AVS registry",
+            convertOperatorStatusToString(operatorFromRegistry.status)
+        );
         emit log_named_bytes32(
-            "operatorId from registry",
+            "   operatorId in AVS registry",
             operatorFromRegistry.operatorId
         );
         emit log_named_uint(
-            "operator fromTaskNumber from registry",
+            "   operator fromTaskNumber in AVS registry",
             operatorFromRegistry.fromTaskNumber
-        );
-        emit log_named_string(
-            "operator status from registry",
-            convertOperatorStatusToString(operatorFromRegistry.status)
         );
         bool isFrozen = contracts.eigenlayer.slasher.isFrozen(operatorAddr);
         emit log_named_string(
