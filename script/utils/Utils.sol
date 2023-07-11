@@ -18,7 +18,7 @@ contract Utils is Script {
             if (token == IERC20(address(0))) {
                 payable(tos[i]).transfer(amounts[i]);
             } else {
-                token.transfer(tos[i], amounts[i]);
+                token.transferFrom(tos[i], tos[i], amounts[i]);
             }
         }
     }
@@ -31,7 +31,7 @@ contract Utils is Script {
         for (uint256 i = 0; i < tos.length; i++) {
             IERC20 underlyingToken = StrategyBase(strategyAddress)
                 .underlyingToken();
-            underlyingToken.transfer(tos[i], amounts[i]);
+            underlyingToken.transferFrom(tos[i], tos[i], amounts[i]);
         }
     }
 

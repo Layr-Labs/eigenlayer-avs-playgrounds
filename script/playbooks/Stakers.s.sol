@@ -31,11 +31,20 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         allocateTokenToStakers(stakers, strategyAddresses);
 
         // parsing avsConfigFile for operators
-        // Operator[] memory operators = parseOperatorsFromConfigFile(avsConfigFile);
+        Operator[] memory operators = parseOperatorsFromConfigFile(avsConfigFile);
 
         // stakers delegating to the operators
-        // delgateToOperators(stakers, operators, contracts);
+        delgateToOperators(stakers, operators, contracts);
     }
+
+
+    // function  unstakeFromEigen(
+    //     string memory avsConfigFile
+    // ) external {
+    //     // queue withdrawal from EigenLayer
+
+    // }
+
 
     function allocateTokenToStakers(
         Staker[] memory stakers,
@@ -79,11 +88,9 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         Contracts memory contracts
     ) public {
 
-        uint256[] memory stakerPrivateKeys = new uint256[](stakers.length);
-
         // Deposit stakers into EigenLayer and delegate to operators
-        for (uint256 i = 0; i < stakerPrivateKeys.length; i++) {
-            vm.startBroadcast(stakerPrivateKeys[i]);
+        for (uint256 i = 0; i < stakers.length; i++) {
+            vm.startBroadcast(stakers[i].privateKey);
             // TODO: change 1 to length of the dummyTokenStrat field after array format is adopted 
             for (uint j = 0; j < 1; j++) {
                 if (stakers[i].stakeAllocated[j] > 0) {
