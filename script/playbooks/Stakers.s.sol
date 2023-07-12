@@ -16,6 +16,7 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
     mapping(address => IStrategy[]) public allStrategiesWhereWithdrawalHappening;
     mapping(address => uint256[]) public sharesInStrategiesWhereWithdrawalHappening;
 
+
     function  allocateTokensToStakersAndDelegateToOperator(
         string memory avsConfigFile
     ) external {
@@ -73,7 +74,7 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
                                         stakersCurrentlyRestakedOnEigenLayer
                                         );
 
-        // emit log_address(stakersToBeWithdrawn[0].addr);
+        emit log_address(stakersToBeWithdrawn[0].addr);
         
         queueWithdrawalFromEigenLayer(contracts, stakersToBeWithdrawn);
         uint32 withdrawalStartBlock = parseBlockNumberFromQueuedWithdrawal(queuedWithdrawalOutputFile);
@@ -98,6 +99,13 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         // }
 
     }
+
+    // function completeQueuedWithdrawalFromEigenLayer(
+    //     string memory avsConfigFile,
+    //     string memory queuedWithdrawalOutputFile
+    // ) {
+
+    // }
 
 
     function allocateTokenToStakers(
@@ -315,6 +323,8 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
                                             receiveAsTokens);
         vm.stopBroadcast();
     } 
+
+
 
 
     // STATUS PRINTER FUNCTIONS
