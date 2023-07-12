@@ -3,6 +3,7 @@ pragma solidity =0.8.12;
 
 import "@eigenlayer/contracts/interfaces/IDelegationManager.sol";
 import "@eigenlayer/contracts/core/DelegationManager.sol";
+import "@eigenlayer/contracts/interfaces/IBLSRegistryCoordinatorWithIndices.sol";
 
 import "@eigenlayer/contracts/core/StrategyManager.sol";
 import "@eigenlayer/contracts/strategies/StrategyBase.sol";
@@ -53,7 +54,7 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
     }
     struct PlaygroundAVS {
         PlaygroundAVSServiceManagerV1 serviceManager;
-        IRegistryCoordinator registryCoordinator;
+        IBLSRegistryCoordinatorWithIndices registryCoordinator;
     }
 
     function parseStakersFromConfigFile(
@@ -120,6 +121,19 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
 
         return stakersToBeWithdrawn;
     }
+
+    function parseBlockNumberFromQueuedWithdrawal(
+        string memory queuedWithdrawalOutputFile
+    ) public returns (uint32) {
+        string memory queuedWithdrawalOutput = readInput(queuedWithdrawalOutputFile);
+        uint32 blockNumber = uint32(stdJson.readUint(
+            queuedWithdrawalOutput,
+            ".receipts[0].blockNumber"
+        ));
+
+        return blockNumber;
+    }
+
 
     function parseContractsFromDeploymentOutputFiles(
         string memory eigenlayerDeploymentOutputFile,
@@ -238,10 +252,10 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
         contracts.playgroundAVS.serviceManager = PlaygroundAVSServiceManagerV1(
             playgroundAVSServiceManagerV1
         );
-        contracts.playgroundAVS.registryCoordinator = contracts
+        contracts.playgroundAVS.registryCoordinator = IBLSRegistryCoordinatorWithIndices(address(contracts
             .playgroundAVS
             .serviceManager
-            .registryCoordinator();
+            .registryCoordinator()));
         contracts.eigenlayer.delegationManager = contracts
             .playgroundAVS
             .serviceManager

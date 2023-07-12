@@ -46,10 +46,11 @@ deregister-operators-with-avs: ##
 -----------------------------: ## 
 __STAKER_INTERACTIONS__: ## 
 setup-stakers-and-delegate-to-operator: ## Allocate tokens to stakers from config file playground_avs_input.json and do delegations of stakers to operators
-	forge script script/playbooks/Stakers.s.sol --sig "allocateTokensToStakersAndDelegateToOperator(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input
+	forge script script/playbooks/Stakers.s.sol --sig "allocateTokensToStakersAndDelegateToOperator(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input 
 
 staker-queue-withdrawal: ## Queue withdrawals from the staker in EigenLayer
-	forge script script/playbooks/Stakers.s.sol --sig "queueWithdrawalFromEigenLayer(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input
+# TODO: queueWithdrawalFromEigenLayer-latest has been copied from the broadcast folder but this is just a hacky way
+	forge script script/playbooks/Stakers.s.sol --sig "queueWithdrawalFromEigenLayer(string memory avsConfigFile, string memory queuedWithdrawalOutputFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input queueWithdrawalFromEigenLayer-latest
 
 -----------------------------: ## 
 ___STATUS_PRINTERS___: ## 
