@@ -159,7 +159,7 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
             }
 
             // staker i is calling delegation manager to delegate its assets to some operator i
-            contracts.eigenlayer.delegationManager.delegateTo(operators[i].addr);
+            contracts.eigenlayer.delegationManager.delegateTo(operators[i].ECDSAAddress);
             vm.stopBroadcast();
         }
     }

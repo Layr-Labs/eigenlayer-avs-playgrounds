@@ -11,6 +11,7 @@ ifndef PRIVATE_KEY
 $(error PRIVATE_KEY is not defined. Export it via `export PRIVATE_KEY=<url>`. eg: `export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`)
 endif
 
+-----------------------------: ## 
 ___CONTRACTS_DEPLOYMENT___: ## 
 deploy-eigenlayer: ## Deploy eigenlayer
 	forge script script/EigenLayerDeploy.s.sol --rpc-url ${RPC_URL}  --private-key ${PRIVATE_KEY} --etherscan-api-key ${ETHERSCAN_API_KEY} --verify --broadcast -vvvv
@@ -18,7 +19,8 @@ deploy-eigenlayer: ## Deploy eigenlayer
 deploy-avs: ## Deploy avs
 	forge script script/PlaygroundAVSDeployer.s.sol --rpc-url ${RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast -vvvv
 
-___OPERATOR_INTERACTIONS___: ## 
+-----------------------------: ## 
+OPERATOR_INTERACTIONS: ## 
 
 fill-operator-keys-info: ## Reads operator ECDSA and BLS private keys from playground_avs_input.json and computes required public keys to register with BLSCompendium
 	pushd crypto && go run .
@@ -35,7 +37,7 @@ deregister-operators-with-avs: ## Register operators with playground-avs from co
 register-operators-with-eigenlayer-and-avs: ## Register operators from config file playground_avs_input.json
 	forge script script/playbooks/Operators.s.sol --sig "registerOperatorsWithEigenlayerAndAvsFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input
 
-
+-----------------------------: ## 
 __STAKER_INTERACTIONS__: ## 
 setup-stakers-and-delegate-to-operator: ## Allocate tokens to stakers from config file playground_avs_input.json and do delegations of stakers to operators
 	forge script script/playbooks/Stakers.s.sol --sig "allocateTokensToStakersAndDelegateToOperator(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input
@@ -43,6 +45,7 @@ setup-stakers-and-delegate-to-operator: ## Allocate tokens to stakers from confi
 staker-queue-withdrawal: ## Queue withdrawals from the staker in EigenLayer
 	forge script script/playbooks/Stakers.s.sol --sig "queueWithdrawalFromEigenLayer(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input
 
+-----------------------------: ## 
 ___STATUS_PRINTERS___: ## 
 
 print-operators-status: ## Print status of all operators from config file playground_avs_input.json

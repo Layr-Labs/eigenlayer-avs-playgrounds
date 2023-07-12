@@ -2,6 +2,8 @@
 pragma solidity =0.8.12;
 
 import "../utils/PlaygroundAVSConfigParser.sol";
+import "@eigenlayer/contracts/middleware/BLSRegistryCoordinatorWithIndices.sol";
+import "@eigenlayer/contracts/middleware/BLSPubkeyRegistry.sol";
 
 contract Operators is Script, PlaygroundAVSConfigParser {
     // PUBLIC FUNCTIONS THAT READ FROM CONFIG FILES AND CALL INTERNAL FUNCTIONS
@@ -65,9 +67,9 @@ contract Operators is Script, PlaygroundAVSConfigParser {
         Contracts memory contracts
     ) internal {
         for (uint256 i = 0; i < operators.length; i++) {
-            vm.broadcast(operators[i].privateKey);
+            vm.broadcast(operators[i].ECDSAPrivateKey);
             contracts.eigenlayer.delegationManager.registerAsOperator(
-                IDelegationTerms(operators[i].addr)
+                IDelegationTerms(operators[i].ECDSAAddress)
             );
         }
     }
@@ -80,19 +82,29 @@ contract Operators is Script, PlaygroundAVSConfigParser {
         string memory socket = "whatIsThis?";
         for (uint256 i = 0; i < operators.length; i++) {
             bytes memory registrationData = abi.encode(
-                operators[i].blsPubKey,
+                operators[i].BN254G1PublicKey,
                 socket
             );
-            vm.startBroadcast(operators[i].privateKey);
+            vm.startBroadcast(operators[i].ECDSAPrivateKey);
             contracts.eigenlayer.slasher.optIntoSlashing(
                 address(contracts.playgroundAVS.serviceManager)
             );
+            // TODO(samlaf): create a github issue to eventually fix this typecasting ugliness
+            //               what's even the point of having interfaces if we don't use them?
+            // also probably want to make this registration function a separate thing that we can call early on
+            BLSPubkeyRegistry(
+                address(
+                    BLSRegistryCoordinatorWithIndices(
+                        address(contracts.playgroundAVS.registryCoordinator)
+                    ).blsPubkeyRegistry()
+                )
+            ).pubkeyCompendium().registerBLSPublicKey(
+                    operators[i].SchnorrSignatureOfECDSAAddress,
+                    operators[i].SchnorrSignatureR,
+                    operators[i].BN254G1PublicKey,
+                    operators[i].BN254G2PublicKey
+                );
             contracts
-                .playgroundAVS
-                .registryCoordinator
-                .blsPubkeyRegistry()
-                .pubkeyCompendium()
-                .contracts
                 .playgroundAVS
                 .registryCoordinator
                 .registerOperatorWithCoordinator(
@@ -113,7 +125,7 @@ contract Operators is Script, PlaygroundAVSConfigParser {
         bytes32[] memory operatorIdsToSwap = new bytes32[](0);
         for (uint256 i = 0; i < operators.length; i++) {
             bytes memory deregistrationData = abi.encode(
-                operators[i].blsPubKey,
+                operators[i].BN254G1PublicKey,
                 operatorIdsToSwap
             );
             contracts
@@ -138,11 +150,13 @@ contract Operators is Script, PlaygroundAVSConfigParser {
 
         for (uint256 i = 0; i < operators.length; i++) {
             emit log_named_uint("PRINTING STATUS OF OPERATOR", i);
-            printOperatorStatus(operators[i].addr);
+            printOperatorStatus(operators[i].ECDSAAddress);
             emit log("--------------------------------------------------");
         }
     }
 
+    // TODO(samlaf): also print delegated amount
+    // TODO(samlaf): also print whether BLS key was registered with BLS compendium
     function printOperatorStatus(address operatorAddr) public {
         Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
             "eigenlayer_deployment_output",

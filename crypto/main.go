@@ -15,12 +15,12 @@ import (
 	"path/filepath"
 )
 
-type G1Element struct {
+type BN254G1Element struct {
 	X string `json:"X"`
 	Y string `json:"Y"`
 }
 
-type G2Element struct {
+type BN254G2Element struct {
 	X0 string `json:"X0"`
 	Y0 string `json:"Y0"`
 	X1 string `json:"X1"`
@@ -30,10 +30,10 @@ type G2Element struct {
 type Operator struct {
 	ECDSAPrivateKey                string    `json:"ECDSAPrivateKey"`
 	BN254PrivateKey                string    `json:"BN254PrivateKey"`
-	BN254G1PublicKey               G1Element `json:"BN254G1PublicKey"`
-	BN254G2PublicKey               G2Element `json:"BN254G2PublicKey"`
+	BN254G1PublicKey               BN254G1Element `json:"BN254G1PublicKey"`
+	BN254G2PublicKey               BN254G2Element `json:"BN254G2PublicKey"`
 	SchnorrSignatureOfECDSAAddress string    `json:"SchnorrSignatureOfECDSAAddress"`
-	SchnorrSignatureR              G1Element `json:"SchnorrSignatureR"`
+	SchnorrSignatureR              BN254G1Element `json:"SchnorrSignatureR"`
 }
 
 type PlaygroundAVSInput struct {

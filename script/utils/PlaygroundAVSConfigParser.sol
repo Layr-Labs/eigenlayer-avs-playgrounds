@@ -27,9 +27,13 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
         uint256[] stakeAllocated;
     }
     struct Operator {
-        address addr;
-        uint256 privateKey;
-        BN254.G1Point blsPubKey;
+        uint256 ECDSAPrivateKey;
+        address ECDSAAddress;
+        uint256 BN254PrivateKey;
+        BN254.G1Point BN254G1PublicKey;
+        BN254.G2Point BN254G2PublicKey;
+        uint256 SchnorrSignatureOfECDSAAddress;
+        BN254.G1Point SchnorrSignatureR;
     }
     struct Contracts {
         Eigenlayer eigenlayer;
@@ -77,7 +81,7 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
             stakerTokenAmountsRaw,
             (uint256[][])
         );
- 
+
         for (uint j = 0; j < stakers.length; j++) {
             uint256[] memory stake = new uint256[](numstrategies);
             for (uint i = 0; i < numstrategies; i++) {
@@ -93,7 +97,6 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
         string memory avsConfigFile,
         Staker[] memory stakers
     ) public returns (Staker[] memory) {
-
         /* getting information on which stakers have to be withdrawn from the json file */
         // bytes memory indicesOfStakersTobeWithdrawnRaw = stdJson.parseRaw(
         //     avsConfigFile,
@@ -104,7 +107,6 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
         //     indicesOfStakersTobeWithdrawnRaw,
         //     (uint256[])
         // );
-        
 
         // /* storing all the relevant info on these stakers to be withdrawn in an array */
         // Staker[] memory stakersToBeWithdrawn = new Staker[](indicesOfStakersTobeWithdrawn.length);
@@ -115,11 +117,9 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
         // @todo for not just hardcoded, need to get above working
         Staker[] memory stakersToBeWithdrawn = new Staker[](1);
         stakersToBeWithdrawn[0] = stakers[0];
-        
 
         return stakersToBeWithdrawn;
     }
-
 
     function parseContractsFromDeploymentOutputFiles(
         string memory eigenlayerDeploymentOutputFile,
@@ -151,27 +151,70 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
     ) public returns (Operator[] memory) {
         string memory avsConfig = readInput(configFileName);
 
-        // parse contracts
-
-        uint256[] memory operatorPrivateKeys = stdJson.readUintArray(
-            avsConfig,
-            ".operatorPrivateKeys"
-        );
-        Operator[] memory operators = getOperatorsFromPrivateKeys(
-            operatorPrivateKeys
-        );
-        bytes memory operatorsBN254G1CoordinatesRaw = stdJson.parseRaw(
-            avsConfig,
-            ".operatorsBN254G1Coordinates"
-        );
-        uint256[][] memory operatorsBN254G1Coordinates = abi.decode(
-            operatorsBN254G1CoordinatesRaw,
-            (uint256[][])
-        );
-        for (uint256 i = 0; i < operators.length; i++) {
-            operators[i].blsPubKey = BN254.G1Point(
-                operatorsBN254G1Coordinates[i][0],
-                operatorsBN254G1Coordinates[i][1]
+        Operator[] memory operators = new Operator[](2);
+        for (uint256 i = 0; i < 2; i++) {
+            // parsing structs via rawjson (https://book.getfoundry.sh/cheatcodes/parse-json?highlight=stdjso#decoding-json-objects-into-solidity-structs)
+            // is a real pain in the @$$, so we opted against using it
+            string memory baseSelector = string.concat(
+                ".operators[",
+                vm.toString(uint256(i)),
+                "]"
+            );
+            operators[i].ECDSAPrivateKey = stdJson.readUint(
+                avsConfig,
+                string.concat(baseSelector, ".ECDSAPrivateKey")
+            );
+            operators[i].ECDSAAddress = vm.addr(operators[i].ECDSAPrivateKey);
+            operators[i].BN254PrivateKey = stdJson.readUint(
+                avsConfig,
+                string.concat(baseSelector, ".BN254PrivateKey")
+            );
+            operators[i].BN254G1PublicKey = BN254.G1Point(
+                stdJson.readUint(
+                    avsConfig,
+                    string.concat(baseSelector, ".BN254G1PublicKey.X")
+                ),
+                stdJson.readUint(
+                    avsConfig,
+                    string.concat(baseSelector, ".BN254G1PublicKey.Y")
+                )
+            );
+            // Note the reverse ordering! This is important. See comments in BN254 for more info
+            operators[i].BN254G2PublicKey = BN254.G2Point(
+                [
+                    stdJson.readUint(
+                        avsConfig,
+                        string.concat(baseSelector, ".BN254G2PublicKey.X1")
+                    ),
+                    stdJson.readUint(
+                        avsConfig,
+                        string.concat(baseSelector, ".BN254G2PublicKey.X0")
+                    )
+                ],
+                [
+                    stdJson.readUint(
+                        avsConfig,
+                        string.concat(baseSelector, ".BN254G2PublicKey.Y1")
+                    ),
+                    stdJson.readUint(
+                        avsConfig,
+                        string.concat(baseSelector, ".BN254G2PublicKey.Y0")
+                    )
+                ]
+            );
+            operators[i].SchnorrSignatureR = BN254.G1Point(
+                stdJson.readUint(
+                    avsConfig,
+                    string.concat(baseSelector, ".SchnorrSignatureR.X")
+                ),
+                stdJson.readUint(
+                    avsConfig,
+                    string.concat(baseSelector, ".SchnorrSignatureR.Y")
+                )
+            );
+            operators[i].SchnorrSignatureOfECDSAAddress = stdJson.readUint(
+                avsConfig,
+                string.concat(baseSelector, ".SchnorrSignatureOfECDSAAddress")
             );
         }
 
@@ -185,16 +228,6 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
         for (uint i = 0; i < stakers.length; i++) {
             stakers[i].privateKey = stakerPrivateKeys[i];
             stakers[i].addr = vm.addr(stakerPrivateKeys[i]);
-        }
-    }
-
-    function getOperatorsFromPrivateKeys(
-        uint256[] memory operatorPrivateKeys
-    ) public pure returns (Operator[] memory operators) {
-        operators = new Operator[](operatorPrivateKeys.length);
-        for (uint i = 0; i < operators.length; i++) {
-            operators[i].privateKey = operatorPrivateKeys[i];
-            operators[i].addr = vm.addr(operators[i].privateKey);
         }
     }
 
