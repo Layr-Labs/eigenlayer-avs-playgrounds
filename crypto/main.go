@@ -64,6 +64,7 @@ func main() {
 
 }
 
+// TODO(samlaf): write print statements to explain what's happening
 func fillOperatorKeysInfo(playgroundAVSInput *PlaygroundAVSInput) {
 	for i := 0; i < len(playgroundAVSInput.Operators); i++ {
 		blsKeyPair, err := bls.BlsKeysFromString(playgroundAVSInput.Operators[i].BN254PrivateKey)

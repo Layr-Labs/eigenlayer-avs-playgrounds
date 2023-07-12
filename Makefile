@@ -11,6 +11,9 @@ ifndef PRIVATE_KEY
 $(error PRIVATE_KEY is not defined. Export it via `export PRIVATE_KEY=<url>`. eg: `export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`)
 endif
 
+# TODO(missing functionality):
+# 1. as an AVS, I want to get the % stake that has signed off on a message (from stake registry.. maybe wait for credible squaring)
+# 2. integrate with some CLI wallet (clef? metamask snap? etc)
 -----------------------------: ## 
 ___CONTRACTS_DEPLOYMENT___: ## 
 deploy-eigenlayer: ## Deploy eigenlayer
@@ -20,22 +23,25 @@ deploy-avs: ## Deploy avs
 	forge script script/PlaygroundAVSDeployer.s.sol --rpc-url ${RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast -vvvv
 
 -----------------------------: ## 
-OPERATOR_INTERACTIONS: ## 
+OPERATOR_INTERACTIONS: ## Below commands read from script/input/5/playground_avs_input.json
 
-fill-operator-keys-info: ## Reads operator ECDSA and BLS private keys from playground_avs_input.json and computes required public keys to register with BLSCompendium
+fill-operator-keys-info: ## Reads operator ECDSA and BLS private keys and computes required public keys to register with BLSCompendium
 	pushd crypto && go run .
 
-register-operators-with-eigenlayer: ## Register operators with eigenlayer from config file playground_avs_input.json
+register-operators-with-eigenlayer: ## 
 	forge script script/playbooks/Operators.s.sol --sig "registerOperatorsWithEigenlayerFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input
 
-register-operators-with-avs: ## Register operators with playground-avs from config file playground_avs_input.json
+register-operators-bn254-keys-with-avs-pubkey-compendium: ## 
+	forge script script/playbooks/Operators.s.sol --sig "registerOperatorsBN254KeysWithAVSPubkeyCompendiumFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input -vvvv
+
+opt-operators-into-slashing-by-avs: ## 
+	forge script script/playbooks/Operators.s.sol --sig "optOperatorsIntoSlashingByPlaygroundAVSFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input -vvvv
+
+register-operators-with-avs: ## 
 	forge script script/playbooks/Operators.s.sol --sig "registerOperatorsWithPlaygroundAVSFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input -vvvv
 
-deregister-operators-with-avs: ## Register operators with playground-avs from config file playground_avs_input.json
+deregister-operators-with-avs: ## 
 	forge script script/playbooks/Operators.s.sol --sig "deregisterOperatorsWithPlaygroundAVSFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input
-
-register-operators-with-eigenlayer-and-avs: ## Register operators from config file playground_avs_input.json
-	forge script script/playbooks/Operators.s.sol --sig "registerOperatorsWithEigenlayerAndAvsFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input
 
 -----------------------------: ## 
 __STAKER_INTERACTIONS__: ## 

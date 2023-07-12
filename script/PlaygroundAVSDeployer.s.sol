@@ -183,7 +183,11 @@ contract PlaygroundAVSDeployer is Script, Utils {
                 strategyAndWeightingMultipliers[i][0] = IVoteWeigher
                     .StrategyAndWeightingMultiplier({
                         strategy: deployedStrategyArray[i],
-                        multiplier: 1 gwei
+                        // setting this to 1 ether since the divisor is also 1 ether
+                        // therefore this allows an operator to register with even just 1 token
+                        // see ./eigenlayer-contracts/src/contracts/middleware/VoteWeigherBase.sol#L81
+                        //    weight += uint96(sharesAmount * strategyAndMultiplier.multiplier / WEIGHTING_DIVISOR);
+                        multiplier: 1 ether
                     });
             }
 
@@ -272,9 +276,7 @@ contract PlaygroundAVSDeployer is Script, Utils {
             )
         );
 
-        blsOperatorStateRetriever = new BLSOperatorStateRetriever(
-            registryCoordinator
-        );
+        blsOperatorStateRetriever = new BLSOperatorStateRetriever();
 
         // WRITE JSON DATA
         string memory parent_object = "parent object";

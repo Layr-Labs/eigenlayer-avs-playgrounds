@@ -8,13 +8,6 @@ import "@eigenlayer/contracts/middleware/BLSPubkeyRegistry.sol";
 contract Operators is Script, PlaygroundAVSConfigParser {
     // PUBLIC FUNCTIONS THAT READ FROM CONFIG FILES AND CALL INTERNAL FUNCTIONS
 
-    function registerOperatorsWithEigenlayerAndAvsFromConfigFile(
-        string memory avsConfigFile
-    ) external {
-        registerOperatorsWithEigenlayerFromConfigFile(avsConfigFile);
-        registerOperatorsWithPlaygroundAVSFromConfigFile(avsConfigFile);
-    }
-
     function registerOperatorsWithEigenlayerFromConfigFile(
         string memory avsConfigFile
     ) public {
@@ -30,6 +23,32 @@ contract Operators is Script, PlaygroundAVSConfigParser {
         registerOperatorsWithEigenlayer(operators, contracts);
     }
 
+    function registerOperatorsBN254KeysWithAVSPubkeyCompendiumFromConfigFile(
+        string memory avsConfigFile
+    ) public {
+        Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
+            "eigenlayer_deployment_output",
+            "playground_avs_deployment_output"
+        );
+        Operator[] memory operators = parseOperatorsFromConfigFile(
+            avsConfigFile
+        );
+        registerOperatorsBN254KeysWithAVSPubkeyCompendium(operators, contracts);
+    }
+
+    function optOperatorsIntoSlashingByPlaygroundAVSFromConfigFile(
+        string memory avsConfigFile
+    ) public {
+        Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
+            "eigenlayer_deployment_output",
+            "playground_avs_deployment_output"
+        );
+        Operator[] memory operators = parseOperatorsFromConfigFile(
+            avsConfigFile
+        );
+        optOperatorsIntoSlashingByPlaygroundAVS(operators, contracts);
+    }
+
     function registerOperatorsWithPlaygroundAVSFromConfigFile(
         string memory avsConfigFile
     ) public {
@@ -37,11 +56,9 @@ contract Operators is Script, PlaygroundAVSConfigParser {
             "eigenlayer_deployment_output",
             "playground_avs_deployment_output"
         );
-
         Operator[] memory operators = parseOperatorsFromConfigFile(
             avsConfigFile
         );
-
         registerOperatorsWithPlaygroundAVS(operators, contracts);
     }
 
@@ -74,21 +91,12 @@ contract Operators is Script, PlaygroundAVSConfigParser {
         }
     }
 
-    function registerOperatorsWithPlaygroundAVS(
+    function registerOperatorsBN254KeysWithAVSPubkeyCompendium(
         Operator[] memory operators,
         Contracts memory contracts
     ) internal {
-        bytes memory quorumNumbers = new bytes(1);
-        string memory socket = "whatIsThis?";
         for (uint256 i = 0; i < operators.length; i++) {
-            bytes memory registrationData = abi.encode(
-                operators[i].BN254G1PublicKey,
-                socket
-            );
             vm.startBroadcast(operators[i].ECDSAPrivateKey);
-            contracts.eigenlayer.slasher.optIntoSlashing(
-                address(contracts.playgroundAVS.serviceManager)
-            );
             // TODO(samlaf): create a github issue to eventually fix this typecasting ugliness
             //               what's even the point of having interfaces if we don't use them?
             // also probably want to make this registration function a separate thing that we can call early on
@@ -104,6 +112,36 @@ contract Operators is Script, PlaygroundAVSConfigParser {
                     operators[i].BN254G1PublicKey,
                     operators[i].BN254G2PublicKey
                 );
+            vm.stopBroadcast();
+        }
+    }
+
+    function optOperatorsIntoSlashingByPlaygroundAVS(
+        Operator[] memory operators,
+        Contracts memory contracts
+    ) internal {
+        for (uint256 i = 0; i < operators.length; i++) {
+            vm.startBroadcast(operators[i].ECDSAPrivateKey);
+            contracts.eigenlayer.slasher.optIntoSlashing(
+                address(contracts.playgroundAVS.serviceManager)
+            );
+            vm.stopBroadcast();
+        }
+    }
+
+    function registerOperatorsWithPlaygroundAVS(
+        Operator[] memory operators,
+        Contracts memory contracts
+    ) internal {
+        // we don't initialize it because we register with quorum 0 (first quorum)
+        bytes memory quorumNumbers = new bytes(1);
+        string memory socket = "NotNeededForPlaygroundAVS";
+        for (uint256 i = 0; i < operators.length; i++) {
+            bytes memory registrationData = abi.encode(
+                operators[i].BN254G1PublicKey,
+                socket
+            );
+            vm.startBroadcast(operators[i].ECDSAPrivateKey);
             contracts
                 .playgroundAVS
                 .registryCoordinator
@@ -120,14 +158,28 @@ contract Operators is Script, PlaygroundAVSConfigParser {
         Contracts memory contracts
     ) internal {
         bytes memory quorumNumbers = new bytes(1);
-        quorumNumbers[0] = 0x01;
         // TODO: can we call this fct without specifying operators to swap?
-        bytes32[] memory operatorIdsToSwap = new bytes32[](0);
-        for (uint256 i = 0; i < operators.length; i++) {
+        bytes32[] memory operatorIdsToSwap = new bytes32[](1);
+        for (
+            uint256 forwardIdx = 0;
+            forwardIdx < operators.length;
+            forwardIdx++
+        ) {
+            // deregistration is a bit clunky because 
+            // we deregister from the back to the front because 
+            // we get the operatorId from the registry
+            uint256 backwardIdx = operators.length - 1 - forwardIdx;
+            IRegistryCoordinator.Operator
+                memory operatorFromRegistry = contracts
+                    .playgroundAVS
+                    .registryCoordinator
+                    .getOperator(operators[backwardIdx].ECDSAAddress);
+            operatorIdsToSwap[0] = operatorFromRegistry.operatorId;
             bytes memory deregistrationData = abi.encode(
-                operators[i].BN254G1PublicKey,
+                operators[backwardIdx].BN254G1PublicKey,
                 operatorIdsToSwap
             );
+            vm.startBroadcast(operators[backwardIdx].ECDSAPrivateKey);
             contracts
                 .playgroundAVS
                 .registryCoordinator
@@ -155,7 +207,6 @@ contract Operators is Script, PlaygroundAVSConfigParser {
         }
     }
 
-    // TODO(samlaf): also print delegated amount
     // TODO(samlaf): also print whether BLS key was registered with BLS compendium
     function printOperatorStatus(address operatorAddr) public {
         Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
@@ -166,6 +217,14 @@ contract Operators is Script, PlaygroundAVSConfigParser {
         emit log_named_uint(
             "dummy token balance",
             contracts.tokens.dummyToken.balanceOf(operatorAddr)
+        );
+        uint delegatedShares = contracts
+            .eigenlayer
+            .delegationManager
+            .operatorShares(operatorAddr, contracts.eigenlayer.dummyTokenStrat);
+        emit log_named_uint(
+            "delegated shares in dummyTokenStrat",
+            delegatedShares
         );
         bool isEigenlayerOperator = contracts
             .eigenlayer
