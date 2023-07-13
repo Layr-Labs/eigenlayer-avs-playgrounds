@@ -28,11 +28,11 @@ type BN254G2Element struct {
 }
 
 type Operator struct {
-	ECDSAPrivateKey                string    `json:"ECDSAPrivateKey"`
-	BN254PrivateKey                string    `json:"BN254PrivateKey"`
+	ECDSAPrivateKey                string         `json:"ECDSAPrivateKey"`
+	BN254PrivateKey                string         `json:"BN254PrivateKey"`
 	BN254G1PublicKey               BN254G1Element `json:"BN254G1PublicKey"`
 	BN254G2PublicKey               BN254G2Element `json:"BN254G2PublicKey"`
-	SchnorrSignatureOfECDSAAddress string    `json:"SchnorrSignatureOfECDSAAddress"`
+	SchnorrSignatureOfECDSAAddress string         `json:"SchnorrSignatureOfECDSAAddress"`
 	SchnorrSignatureR              BN254G1Element `json:"SchnorrSignatureR"`
 }
 
@@ -64,28 +64,33 @@ func main() {
 
 }
 
-// TODO(samlaf): write print statements to explain what's happening
 func fillOperatorKeysInfo(playgroundAVSInput *PlaygroundAVSInput) {
 	for i := 0; i < len(playgroundAVSInput.Operators); i++ {
+		// note that bls is the signature scheme, which we are using on the BN254 curve
 		blsKeyPair, err := bls.BlsKeysFromString(playgroundAVSInput.Operators[i].BN254PrivateKey)
 		if err != nil {
 			panic(err)
 		}
+		fmt.Println("Read operator", i, "BN254 private key:", playgroundAVSInput.Operators[i].BN254PrivateKey)
 		// Fill in the Public keys from the private key
 		playgroundAVSInput.Operators[i].BN254G1PublicKey.X = blsKeyPair.PublicKey.X.String()
 		playgroundAVSInput.Operators[i].BN254G1PublicKey.Y = blsKeyPair.PublicKey.Y.String()
+		fmt.Printf("Generated BN254 G1 public key: (%s %s)\n", blsKeyPair.PublicKey.X.String(), blsKeyPair.PublicKey.Y.String())
 
 		playgroundAVSInput.Operators[i].BN254G2PublicKey.X0 = blsKeyPair.GetPubKeyPointG2().X.A0.String()
 		playgroundAVSInput.Operators[i].BN254G2PublicKey.X1 = blsKeyPair.GetPubKeyPointG2().X.A1.String()
 		playgroundAVSInput.Operators[i].BN254G2PublicKey.Y0 = blsKeyPair.GetPubKeyPointG2().Y.A0.String()
 		playgroundAVSInput.Operators[i].BN254G2PublicKey.Y1 = blsKeyPair.GetPubKeyPointG2().Y.A1.String()
+		fmt.Printf("Generated BN254 G2 public key: (%s %s, %s %s)\n", blsKeyPair.GetPubKeyPointG2().X.A0.String(), blsKeyPair.GetPubKeyPointG2().X.A1.String(), blsKeyPair.GetPubKeyPointG2().Y.A0.String(), blsKeyPair.GetPubKeyPointG2().Y.A1.String())
 
 		// blsKeyPair.MakeRegistrationData()
 		operatorAddr := getAddressFromPrivateKey(playgroundAVSInput.Operators[i].ECDSAPrivateKey)
 		s, R, _ := blsKeyPair.MakeRegistrationData(operatorAddr)
 		playgroundAVSInput.Operators[i].SchnorrSignatureOfECDSAAddress = s.String()
+		fmt.Printf("Generated Schnorr signature of ECDSA address: %s\n", s.String())
 		playgroundAVSInput.Operators[i].SchnorrSignatureR.X = R.X.String()
 		playgroundAVSInput.Operators[i].SchnorrSignatureR.Y = R.Y.String()
+		fmt.Printf("Generated Schnorr signature R: (%s %s)\n\n", R.X.String(), R.Y.String())
 	}
 }
 
