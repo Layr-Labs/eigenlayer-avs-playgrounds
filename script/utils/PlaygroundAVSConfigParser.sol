@@ -21,7 +21,7 @@ import "forge-std/StdJson.sol";
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
-contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
+contract PlaygroundAVSConfigParser is Script, Test, Utils {
     struct Staker {
         address addr;
         uint256 privateKey;
@@ -124,45 +124,35 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
 
     function parseBlockNumberAndOperatorDetailsFromQueuedWithdrawal(
         string memory queuedWithdrawalOutputFile
-    ) public returns (uint32, uint32) {
+    ) public returns (uint32, address) {
         string memory queuedWithdrawalOutput = vm.readFile("broadcast/Stakers.s.sol/5/queueWithdrawalFromEigenLayer-latest.json");
         uint32 blockNumber = uint32(stdJson.readUint(
             queuedWithdrawalOutput,
             ".receipts[0].blockNumber"
         ));
 
-        bytes memory eventRaw =  stdJson.parseRaw(
+        bytes memory eventData =  stdJson.readBytes(
             queuedWithdrawalOutput,
-            ".receipts[0].blockNumber2"
+            // TODO: is the correct log always going to be the second one?
+            ".receipts[0].logs[1].data"
+        );      
+
+        address depositor;
+        uint96 nonce;
+        address withdrawer;
+        address delegatedAddress;
+        bytes32 withdrawalRoot;
+        (depositor, nonce, withdrawer, delegatedAddress, withdrawalRoot)  = abi.decode(
+            eventData,
+            (address, uint96, address, address, bytes32)
         );
-        emit log_bytes(eventRaw);
+        emit log_named_address("depositor", depositor);
+        emit log_named_uint("nonce", nonce);
+        emit log_named_address("withdrawer", withdrawer);
+        emit log_named_address("delegatedAddress", delegatedAddress);
+        emit log_named_bytes32("withdrawalRoot", withdrawalRoot);
 
-        uint32 blockno1;
-        uint32 blockno2;
-        (blockno1, blockno2)  = abi.decode(
-            eventRaw,
-            (uint32, uint32)
-        );
-        
-
-        // bytes memory eventRaw =  stdJson.parseRaw(
-        //     queuedWithdrawalOutput,
-        //     ".receipts[0].logs[1].data"
-        // );      
-
-        // address depositor;
-        // uint96 nonce;
-        // address withdrawer;
-        // address delegatedAddress;
-        // bytes32 withdrawalRoot;
-        // (depositor, nonce, withdrawer, delegatedAddress, withdrawalRoot)  = abi.decode(
-        //     eventRaw,
-        //     (address, uint96, address, address, bytes32)
-        // );
-
-        // emit log_address(delegatedAddress);
-        // emit log_uint(nonce);
-        return (blockNumber, blockno2);
+        return (blockNumber, delegatedAddress);
     }
 
 
