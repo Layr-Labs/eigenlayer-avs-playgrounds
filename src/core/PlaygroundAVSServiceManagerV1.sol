@@ -75,13 +75,12 @@ contract PlaygroundAVSServiceManagerV1 is
     }
 
     /// @notice Called in the event of challenge resolution, in order to forward a call to the Slasher, which 'freezes' the `operator`.
-    function freezeOperator(address /*operator*/) external {
-        revert("PlaygroundAVSServiceManagerV1.freezeOperator: not implemented");
+    function freezeOperator(address operatorAddr) external {
         // require(
         //     msg.sender == address(???),
         //     "PlaygroundAVSServiceManagerV1.freezeOperator: Only ??? can slash operators"
         // );
-        // slasher.freezeOperator(operator);
+        slasher.freezeOperator(operatorAddr);
     }
 
     /**
@@ -153,8 +152,9 @@ contract PlaygroundAVSServiceManagerV1 is
         return OwnableUpgradeable.owner();
     }
 
-    function dummyFunction() external {
-        DummyStruct memory dummyStruct = DummyStruct({dummyUint: 0});
+    function createDummyTask() external {
+        DummyStruct memory dummyStruct = DummyStruct({dummyTaskNum: taskNum});
         emit DummyEvent(dummyStruct);
+        taskNum++;
     }
 }
