@@ -47,8 +47,8 @@ deregister-operators-with-avs: ##
 	forge script script/playbooks/Operators.s.sol --sig "deregisterOperatorsWithPlaygroundAVSFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input
 
 -----------------------------: ## 
-__STAKER_INTERACTIONS__: ## 
-setup-stakers-and-delegate-to-operator: ## Allocate tokens to stakers from config file playground_avs_input.json and do delegations of stakers to operators
+__STAKER_INTERACTIONS__: ## Below commands read from script/input/5/playground_avs_input.json
+setup-stakers-and-delegate-to-operator: ## Allocate tokens to stakers and do delegations of stakers to operators
 	forge script script/playbooks/Stakers.s.sol --sig "allocateTokensToStakersAndDelegateToOperator(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input 
 
 staker-queue-withdrawal: ## Queue withdrawals from the staker in EigenLayer
