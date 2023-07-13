@@ -122,16 +122,47 @@ contract PlaygroundAVSConfigParser is Script, DSTest, Utils {
         return stakersToBeWithdrawn;
     }
 
-    function parseBlockNumberFromQueuedWithdrawal(
+    function parseBlockNumberAndOperatorDetailsFromQueuedWithdrawal(
         string memory queuedWithdrawalOutputFile
-    ) public returns (uint32) {
-        string memory queuedWithdrawalOutput = readInput(queuedWithdrawalOutputFile);
+    ) public returns (uint32, uint32) {
+        string memory queuedWithdrawalOutput = vm.readFile("broadcast/Stakers.s.sol/5/queueWithdrawalFromEigenLayer-latest.json");
         uint32 blockNumber = uint32(stdJson.readUint(
             queuedWithdrawalOutput,
             ".receipts[0].blockNumber"
         ));
 
-        return blockNumber;
+        bytes memory eventRaw =  stdJson.parseRaw(
+            queuedWithdrawalOutput,
+            ".receipts[0].blockNumber2"
+        );
+        emit log_bytes(eventRaw);
+
+        uint32 blockno1;
+        uint32 blockno2;
+        (blockno1, blockno2)  = abi.decode(
+            eventRaw,
+            (uint32, uint32)
+        );
+        
+
+        // bytes memory eventRaw =  stdJson.parseRaw(
+        //     queuedWithdrawalOutput,
+        //     ".receipts[0].logs[1].data"
+        // );      
+
+        // address depositor;
+        // uint96 nonce;
+        // address withdrawer;
+        // address delegatedAddress;
+        // bytes32 withdrawalRoot;
+        // (depositor, nonce, withdrawer, delegatedAddress, withdrawalRoot)  = abi.decode(
+        //     eventRaw,
+        //     (address, uint96, address, address, bytes32)
+        // );
+
+        // emit log_address(delegatedAddress);
+        // emit log_uint(nonce);
+        return (blockNumber, blockno2);
     }
 
 

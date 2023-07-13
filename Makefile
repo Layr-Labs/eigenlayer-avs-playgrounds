@@ -50,7 +50,13 @@ setup-stakers-and-delegate-to-operator: ## Allocate tokens to stakers from confi
 
 staker-queue-withdrawal: ## Queue withdrawals from the staker in EigenLayer
 # TODO: queueWithdrawalFromEigenLayer-latest has been copied from the broadcast folder but this is just a hacky way
-	forge script script/playbooks/Stakers.s.sol --sig "queueWithdrawalFromEigenLayer(string memory avsConfigFile, string memory queuedWithdrawalOutputFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input queueWithdrawalFromEigenLayer-latest
+	forge script script/playbooks/Stakers.s.sol --sig "queueWithdrawalFromEigenLayer(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input
+
+
+staker-completed-queued-withdrawal: ## Complete queued withdrawals from the staker in EigenLayer
+# TODO: queueWithdrawalFromEigenLayer-latest has been copied from the broadcast folder but this is just a hacky way
+	forge script script/playbooks/Stakers.s.sol --sig "completeQueuedWithdrawalFromEigenLayer(string memory avsConfigFile, string memory queuedWithdrawalOutputFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input queueWithdrawalFromEigenLayer-latest
+
 
 -----------------------------: ## 
 ___STATUS_PRINTERS___: ## 
