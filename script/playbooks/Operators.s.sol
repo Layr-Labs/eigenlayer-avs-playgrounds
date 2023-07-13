@@ -165,8 +165,8 @@ contract Operators is Script, PlaygroundAVSConfigParser {
             forwardIdx < operators.length;
             forwardIdx++
         ) {
-            // deregistration is a bit clunky because 
-            // we deregister from the back to the front because 
+            // deregistration is a bit clunky because
+            // we deregister from the back to the front because
             // we get the operatorId from the registry
             uint256 backwardIdx = operators.length - 1 - forwardIdx;
             IRegistryCoordinator.Operator

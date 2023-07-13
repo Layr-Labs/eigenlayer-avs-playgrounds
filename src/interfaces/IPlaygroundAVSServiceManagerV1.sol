@@ -10,7 +10,6 @@ import "@eigenlayer/contracts/interfaces/IDelegationManager.sol";
 import "@eigenlayer/contracts/interfaces/IPaymentManager.sol";
 
 interface IPlaygroundAVSServiceManagerV1 is IServiceManager, IDelayedService {
-
     // EVENTS
 
     event DummyEvent(DummyStruct);
@@ -18,11 +17,10 @@ interface IPlaygroundAVSServiceManagerV1 is IServiceManager, IDelayedService {
     // STRUCTS
 
     struct DummyStruct {
-        uint256 dummyUint;
+        uint256 dummyTaskNum;
     }
 
     // FUNCTIONS
 
-    function dummyFunction() external;
-
+    function createDummyTask() external;
 }

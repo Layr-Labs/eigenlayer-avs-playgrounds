@@ -11,6 +11,9 @@ ifndef PRIVATE_KEY
 $(error PRIVATE_KEY is not defined. Export it via `export PRIVATE_KEY=<url>`. eg: `export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`)
 endif
 
+run-all:
+	./run-all.sh
+
 # TODO(missing functionality):
 # 1. as an AVS, I want to get the % stake that has signed off on a message (from stake registry.. maybe wait for credible squaring)
 # 2. integrate with some CLI wallet (clef? metamask snap? etc)
@@ -51,6 +54,12 @@ setup-stakers-and-delegate-to-operator: ## Allocate tokens to stakers from confi
 staker-queue-withdrawal: ## Queue withdrawals from the staker in EigenLayer
 # TODO: queueWithdrawalFromEigenLayer-latest has been copied from the broadcast folder but this is just a hacky way
 	forge script script/playbooks/Stakers.s.sol --sig "queueWithdrawalFromEigenLayer(string memory avsConfigFile, string memory queuedWithdrawalOutputFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input queueWithdrawalFromEigenLayer-latest
+
+-----------------------------: ## 
+__WATCHER_INTERACTIONS__: ## 
+
+freeze-operators: ## 
+	forge script script/playbooks/Watchers.s.sol --sig "freezeOperatorsFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --private-key ${PRIVATE_KEY} --broadcast playground_avs_input
 
 -----------------------------: ## 
 ___STATUS_PRINTERS___: ## 

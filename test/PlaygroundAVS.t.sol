@@ -12,7 +12,7 @@ contract CounterTest is Test {
         // playgroundAVS = new PlaygroundAVSServiceManagerV1();
     }
 
-    function testDummyFunction() public {
-        playgroundAVS.dummyFunction();
+    function testCreateDummyTask() public {
+        playgroundAVS.createDummyTask();
     }
 }
