@@ -10,16 +10,12 @@ git clone --recursive git@github.com:Layr-Labs/eigenlayer-AVS-playgrounds.git
 
 Make sure to clone with the `--recursive` flag to get the submodules (eigenlayer contracts and forge-test dependencies).
 
-## Makefile starting point
 
-At any point run `make` to get info on the different possible commands.
-
-<img src="./images/makefile.png" style="width: 50%"/>
 
 ## Eigenlayer contracts
 
 We have deployed a parallel set of contracts on goerli, with all functionality unpaused, for middleware teams to test with. The contract addresses can be found [here](./script/output/5/eigenlayer_deployment_output.json).
-The easiest way to start integrating with these contracts is to fork goerli on a local anvil chain:
+The easiest way to start integrating with these contracts is to fork goerli on a local `anvil` chain. You can install anvil using this [guide](https://book.getfoundry.sh/getting-started/installation):
 ```
 anvil --fork-url https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161
 ```
@@ -35,6 +31,12 @@ export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f
 make deploy-avs
 ```
 This deploys the playgroundAVS service manager contract (which you will need to modify to contain your own AVS' slashing logic) as well as a suite of registry contracts (which can most likely be used as-is for most AVSs).
+
+## Makefile starting point
+
+At any point run `make` to get info on the different possible commands.
+
+<img src="./images/makefile.png" style="width: 50%"/>
 
 ## Operator and staker interactions
 Now feel free to play with any of the other make commands, learn from the errors, ask us questions, etc.
