@@ -8,7 +8,6 @@ contract CounterTest is Test {
     PlaygroundAVSServiceManagerV1 public playgroundAVS;
 
     function setUp() public {
-        // TODO
         // playgroundAVS = new PlaygroundAVSServiceManagerV1();
     }
 

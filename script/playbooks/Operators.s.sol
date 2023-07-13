@@ -158,7 +158,6 @@ contract Operators is Script, PlaygroundAVSConfigParser {
         Contracts memory contracts
     ) internal {
         bytes memory quorumNumbers = new bytes(1);
-        // TODO: can we call this fct without specifying operators to swap?
         bytes32[] memory operatorIdsToSwap = new bytes32[](1);
         for (
             uint256 forwardIdx = 0;
@@ -174,6 +173,8 @@ contract Operators is Script, PlaygroundAVSConfigParser {
                     .playgroundAVS
                     .registryCoordinator
                     .getOperator(operators[backwardIdx].ECDSAAddress);
+            // since we are deregistering the last operator first, that operator is last in the list, so
+            // operatorIdToSwap is just itself
             operatorIdsToSwap[0] = operatorFromRegistry.operatorId;
             bytes memory deregistrationData = abi.encode(
                 operators[backwardIdx].BN254G1PublicKey,
@@ -207,7 +208,6 @@ contract Operators is Script, PlaygroundAVSConfigParser {
         }
     }
 
-    // TODO(samlaf): also print whether BLS key was registered with BLS compendium
     function printOperatorStatus(address operatorAddr) public {
         Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
             "eigenlayer_deployment_output",
@@ -225,6 +225,17 @@ contract Operators is Script, PlaygroundAVSConfigParser {
         emit log_named_uint(
             "delegated shares in dummyTokenStrat",
             delegatedShares
+        );
+        bytes32 operatorPubKeyHash = BLSPubkeyRegistry(
+            address(
+                BLSRegistryCoordinatorWithIndices(
+                    address(contracts.playgroundAVS.registryCoordinator)
+                ).blsPubkeyRegistry()
+            )
+        ).pubkeyCompendium().operatorToPubkeyHash(operatorAddr);
+        emit log_named_bytes32(
+            "operator pubkey hash in AVS pubkey compendium (0 if not registered)",
+            operatorPubKeyHash
         );
         bool isEigenlayerOperator = contracts
             .eigenlayer

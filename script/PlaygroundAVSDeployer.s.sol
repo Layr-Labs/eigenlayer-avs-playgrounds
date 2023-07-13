@@ -23,11 +23,6 @@ import "forge-std/Test.sol";
 import "forge-std/Script.sol";
 import "forge-std/StdJson.sol";
 
-// TODO: REVIEW AND FIX THIS ENTIRE SCRIPT
-
-// # To load the variables in the .env file
-// source .env
-
 // # To deploy and verify our contract
 // forge script script/PlaygroundAVSDeployer.s.sol:PlaygroundAVSDeployer --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
 contract PlaygroundAVSDeployer is Script, Utils {

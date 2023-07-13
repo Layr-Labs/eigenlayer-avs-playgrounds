@@ -368,15 +368,6 @@ contract EigenLayerDeploy is Script, Test, Utils {
         // STOP RECORDING TRANSACTIONS FOR DEPLOYMENT
         vm.stopBroadcast();
 
-        // TODO: this doesn't work because we don't hold the private key to the alphaMultisig (its a contract anyways)
-        //       so we need to deploy on goerli, whitelist the strategies using the gnosis safe UI, and then fork goerli on anvil
-        //       another option to test everything locally would be to set the alphaMultisig to be some EOA wallet we control
-        // vm.startBroadcast(alphaMultisig);
-        // IStrategy[] memory strategies = new IStrategy[](1);
-        // strategies[0] = baseStrategy;
-        // strategyManager.addStrategiesToDepositWhitelist(strategies);
-        // vm.stopBroadcast();
-
         // CHECK CORRECTNESS OF DEPLOYMENT
         _verifyContractsPointAtOneAnother(
             delegationImplementation,
