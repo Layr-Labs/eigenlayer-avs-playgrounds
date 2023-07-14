@@ -1,3 +1,5 @@
+// Reads operator ECDSA and BLS private keys and computes required public keys to register with BLSCompendium
+// This reads the input file ../script/input/5/playground_avs_input.json and writes back the modified file
 package main
 
 import (

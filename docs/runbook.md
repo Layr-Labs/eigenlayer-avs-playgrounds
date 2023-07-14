@@ -54,7 +54,7 @@ This architecture requires one more step over the bare-bone `opt-into-slashing` 
 
 #### 0. fill-operator-keys-info
 
-This command runs a [golang binary](../crypto/main.go) whose sole purpose is to generate the BLS public keys and signatures required for the operator to [register with the pubkey compendium](#register-operators-bn254-keys-with-avs-pubkey-compendium). It reads the `ECDSAPrivateKey` fields and `BN254PrivateKey` fields from [script/input/5/playground_avs_input.json](../script/input/5/playground_avs_input.json) and generates a struct like the following for each operator:
+This command does not appear in the `make` helper printout explicitly because it is called as a subcommand of the [register with the pubkey compendium](#register-operators-bn254-keys-with-avs-pubkey-compendium) command. It runs a [golang binary](../crypto/main.go) whose sole purpose is to generate the BLS public keys and signatures required for the operator to register with the pubkey compendium. It reads the `ECDSAPrivateKey` fields and `BN254PrivateKey` fields from [script/input/5/playground_avs_input.json](../script/input/5/playground_avs_input.json) and generates a struct like the following for each operator:
 
 ```json
 {

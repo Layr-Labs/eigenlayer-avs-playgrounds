@@ -28,13 +28,13 @@ deploy-avs: ## Deploy avs
 -----------------------------: ## 
 OPERATOR_INTERACTIONS: ## Below commands read from script/input/5/playground_avs_input.json
 
-fill-operator-keys-info: ## Reads operator ECDSA and BLS private keys and computes required public keys to register with BLSCompendium
+fill-operator-keys-info:
 	pushd crypto && go run .
 
 register-operators-with-eigenlayer: ## 
 	forge script script/playbooks/Operators.s.sol --sig "registerOperatorsWithEigenlayerFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input
 
-register-operators-bn254-keys-with-avs-pubkey-compendium: ## 
+register-operators-bn254-keys-with-avs-pubkey-compendium: fill-operator-keys-info ## 
 	forge script script/playbooks/Operators.s.sol --sig "registerOperatorsBN254KeysWithAVSPubkeyCompendiumFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} --broadcast playground_avs_input -vvvv
 
 opt-operators-into-slashing-by-avs: ## 
