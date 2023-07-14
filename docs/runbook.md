@@ -8,21 +8,23 @@ This is meant as a programmatic follow-along guide to the [AVS Guide](https://gi
 
 All of the below commands read from [script/output/5/eigenlayer_deployment_output.json](../script/output/5/eigenlayer_deployment_output.json) and (after deploying the avs contracts) [script/output/5/playground_avs_deployment_output.json](../script/output/5/playground_avs_deployment_output.json). Note that the `5` refers to the chainid, goerli.
 
-## Contracts Deployment
+### Contracts Deployment
 
-#### deploy-eigenlayer
+#### 0. deploy-eigenlayer
 
-The recommended way of interacting with this avs playground is to fork goerli on a local chain, and deploy the avs contracts on top of the eigenlayer contracts already deployed at the addresses in [script/output/5/eigenlayer_deployment_output.json](../script/output/5/eigenlayer_deployment_output.json). However, we still include this `deploy-eigenlayer` command for completeness. It can be used, for example, to deploy a fresh new set of eigenlayer contracts on an empty local chain instead of forking goerli. That would require setting the alphaMultisig to some EOA address whose private key is known, and using that to whitelist the [ERC20Mock.sol](../lib/eigenlayer-contracts/src/test/mocks/ERC20Mock.sol) contract in the strategy manager. The alphaMultisig on goerli is a proper 1/n gnosis safe, which teams needing to interact with the contracts (for eg., to unfreeze operators) should ask us to be added to.
+The recommended way of interacting with this avs playground is to fork goerli on a local chain, and deploy the avs contracts on top of the eigenlayer contracts already deployed at the addresses in [script/output/5/eigenlayer_deployment_output.json](../script/output/5/eigenlayer_deployment_output.json). However, we still include this `deploy-eigenlayer` command for completeness. It can be used, for example, to deploy a fresh new set of eigenlayer contracts on an empty local chain instead of forking goerli. That would require setting the alphaMultisig to some EOA address whose private key is known, and using that to whitelist the [ERC20Mock.sol](https://github.com/Layr-Labs/eigenlayer-contracts/blob/40cbfeaefbb3135bbe0bb0f1dfb8ca4cfbb6784b/src/test/mocks/ERC20Mock.sol) contract in the strategy manager. The alphaMultisig on goerli is a proper 1/n gnosis safe, which teams needing to interact with the contracts (for eg., to unfreeze operators) should ask us to be added to.
 
-#### deploy-avs
+#### 1. deploy-avs
 
-Deploying the avs contracts deploys the [PlaygroundAVSServiceManagerV1.sol](../src/core/PlaygroundAVSServiceManagerV1.sol) as well as the suite of [registry contracts](../lib/eigenlayer-contracts/src/contracts/middleware/), all of which are depicted in the image at the top of this runbook.
+Deploying the avs contracts deploys the [PlaygroundAVSServiceManagerV1.sol](../src/core/PlaygroundAVSServiceManagerV1.sol) as well as the suite of [registry contracts](https://github.com/Layr-Labs/eigenlayer-contracts/tree/40cbfeaefbb3135bbe0bb0f1dfb8ca4cfbb6784b/src/contracts/middleware), all of which are depicted in the image at the top of this runbook.
 
-### Operator Interactions
+### Opting into (aka registering with) Eigenlayer
 
-#### register-operators-with-eigenlayer
+Before doing anything else, an operator needs to register with Eigenlayer and either deposits funds himself and self-delegate them, or wait for a stake to deposit funds and delegate them to that operator. More detailed information can be found in the [delegation flow](https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/EigenLayer-delegation-flow.md) docs.
 
-Before doing anything else, an operator should first register with eigenlayer. This effectively enables stakers to delegate their assets to this operator. See [staker-delegate-to-operators](#staker-delegate-to-operators). Note that this does not register the operator with any AVS; it needs to register to each AVS' registry contract separately.
+#### 1. register-operators-with-eigenlayer
+
+Registering as an operator with eigenlayer effectively enables stakers to delegate their assets to this operator. See [staker-delegate-to-operators](#staker-delegate-to-operators). Note that this does not register the operator with any AVS; it needs to register to each AVS' registry contract separately.
 
 After running this command, you should be able to run [print-operators-status](#print-operators-status) and see the operator's status as opted-in (aka registered):
 
@@ -30,7 +32,27 @@ After running this command, you should be able to run [print-operators-status](#
 operator is opted in to eigenlayer: true
 ```
 
-#### fill-operator-keys-info
+#### 2. staker-mint-tokens-and-deposit-into-strategies
+
+This command mints some [ERC20Mock.sol](https://github.com/Layr-Labs/eigenlayer-contracts/blob/40cbfeaefbb3135bbe0bb0f1dfb8ca4cfbb6784b/src/test/mocks/ERC20Mock.sol) tokens to the caller (staker) and deposits them into the strategy manager. Note that currently only this ERC20Mock token is whitelisted in the StrategyManager, so if you need to use another erc20 token for your AVS (for example if you want to start testing dual or multi quorums), you will need to be added to the alphaMultisig and whitelist that token yourself, or ask us to do it for you.
+
+#### 3. staker-delegate-to-operators
+
+This last step is simply delegating all of the previously deposited assets to a chosen operator. Note that one cannot delegate some assets to some operator and other assets to some other operator. Delegation is a binary status to a single operator.
+
+### [Opting into (aka registering with) AVS](https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/AVS-Guide.md#opting-into-avs)
+
+The number of hoops that operators have to jump through to register with a given AVS is directly dependent on the complexity of that AVS' registry contracts. We have written a suite of [registry contracts](https://docs.google.com/document/d/1EIs9CUaqcPCAYc5UGMRbu6y0BJP7FEY9eja_5lkg0aY/edit) which we believe should cover most AVS' needs and not need modification. We recommend keeping to this standard for now (which will also make it easier for us to index your AVS' registry contract, at least until we set a standard for events that need to be emitted from AVS registries), but if simplifications or modifications are needed, please reach out to us.
+
+The current architecture consists of a registryCoordinator, which is the main entrypoint for all calls, which coordinates registration with 3 specific registries:
+- StakeRegistry which keeps track of the stakes of different operators for different quorums at different times
+- BLSPubkeyRegistry which keeps track of the aggregate public key of different quorums at different times
+- IndexRegistry which keeps track of an ordered list of the operators in each quorum at different times. (this is needed for AVS aggregators to loop through the registered operator set at any given block)
+
+This architecture requires one more step over the bare-bone `opt-into-slashing` and `register-with-avs` calls, since the operator also needs to first register his BLS public key (pairing it with his ECDSA address) in the [BLSPublicKeyCompendium.sol](https://github.com/Layr-Labs/eigenlayer-contracts/blob/40cbfeaefbb3135bbe0bb0f1dfb8ca4cfbb6784b/src/contracts/interfaces/IBLSPublicKeyCompendium.sol#L32) contract.
+
+
+#### 0. fill-operator-keys-info
 
 This command runs a [golang binary](../crypto/main.go) whose sole purpose is to generate the BLS public keys and signatures required for the operator to [register with the pubkey compendium](#register-operators-bn254-keys-with-avs-pubkey-compendium). It reads the `ECDSAPrivateKey` fields and `BN254PrivateKey` fields from [script/input/5/playground_avs_input.json](../script/input/5/playground_avs_input.json) and generates a struct like the following for each operator:
 
@@ -58,23 +80,25 @@ This command runs a [golang binary](../crypto/main.go) whose sole purpose is to 
 
 The `playground_avs_input.json` file is already filled with these information, but try removing all the fields, adding new private keys (both the ECDSA and BN254 ones are required!), and run this command to observe the file getting filled.
 
-#### register-operators-bn254-keys-with-avs-pubkey-compendium
+#### 1. register-operators-bn254-keys-with-avs-pubkey-compendium
 
-This will register the operator's BN254 public keys with the [BLSPublicKeyCompendium.sol](../lib/eigenlayer-contracts/src/contracts/middleware/BLSPublicKeyCompendium.sol) compendium, using the information generated from the [fill-operator-keys-info](#fill-operator-keys-info) command. This is a one-time registration, and is required before the operator can register with the playground AVS. Note also that this command will fail if the operator has not registered with eigenlayer first.
+This will register the operator's BN254 public keys with the [BLSPublicKeyCompendium.sol](https://github.com/Layr-Labs/eigenlayer-contracts/blob/40cbfeaefbb3135bbe0bb0f1dfb8ca4cfbb6784b/src/contracts/middleware/BLSPublicKeyCompendium.sol) compendium, using the information generated from the [fill-operator-keys-info](#fill-operator-keys-info) command. This is a one-time registration, and is required before the operator can register with the playground AVS. Note also that this command will fail if the operator has not registered with eigenlayer first.
 
-#### opt-operators-into-slashing-by-avs
+#### 2. opt-operators-into-slashing-by-avs
 
-#### register-operators-with-avs
+This command calls 
 
-#### deregister-operators-with-avs
+#### 3. register-operators-with-avs
 
-### Staker Interactions
+#### 3.5 [deregister-operators-with-avs](https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/AVS-Guide.md#deregistering-from-avs)
 
-#### staker-mint-tokens-and-deposit-into-strategies
+TODO(soubhik): let's discuss and add details here. Can this call ever fail with our simpler service manager?
 
-#### staker-delegate-to-operators
+### [Recording Stake Updates](https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/AVS-Guide.md#recording-stake-updates)
 
 #### staker-queue-withdrawal
+
+
 
 #### staker-notify-service-about-withdrawal
 
@@ -82,9 +106,11 @@ This will register the operator's BN254 public keys with the [BLSPublicKeyCompen
 
 #### staker-complete-queued-withdrawal
 
-### Watcher Interactions
+### [Slashing](https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/AVS-Guide.md#slashing)
 
 #### freeze-operators
+
+This call freezes the operator (and the stakers delegated to it). The only way to "unfreeze" an operator is by using the alphaMultisig via the gnosis safe. The [safe](https://app.safe.global/welcome) website does not currently permit sending operator to localchain, so this operation is only possible on goerli itself. After freezing an operator locally, one must then create a new operator, or restart the chain to get that operator active again.
 
 ### Status Printers
 
