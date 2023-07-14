@@ -10,20 +10,6 @@ import "forge-std/StdJson.sol";
 
 contract Utils is Script {
     function _allocate(
-        IERC20 token,
-        address[] memory tos,
-        uint256[] memory amounts
-    ) internal {
-        for (uint256 i = 0; i < tos.length; i++) {
-            if (token == IERC20(address(0))) {
-                payable(tos[i]).transfer(amounts[i]);
-            } else {
-                token.transferFrom(tos[i], tos[i], amounts[i]);
-            }
-        }
-    }
-
-    function _allocateNew(
         address strategyAddress,
         address[] memory tos,
         uint256[] memory amounts
@@ -32,6 +18,15 @@ contract Utils is Script {
             IERC20 underlyingToken = StrategyBase(strategyAddress)
                 .underlyingToken();
             underlyingToken.transferFrom(tos[i], tos[i], amounts[i]);
+        }
+    }
+
+    // TODO: this doesn't actually advance by n blocks... maybe because broadcasting batches txs somehow..?
+    function advanceChainByNBlocks(uint256 n) public {
+        for (uint256 i = 0; i < n; i++) {
+            // we transfer eth to ourselves to advance the block
+            vm.broadcast(msg.sender);
+            payable(msg.sender).transfer(1 wei);
         }
     }
 
