@@ -10,9 +10,6 @@ script/output/31337/*.json
 script/output/**/playground_avs_deployment_output.json
 script/output/**/queue_withdrawal_output.json
 
-# Docs
-docs/
-
 # Dotenv file
 .env
 
