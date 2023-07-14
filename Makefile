@@ -56,6 +56,10 @@ staker-queue-withdrawal: ## Queue withdrawals from the staker in EigenLayer
 	forge script script/playbooks/Stakers.s.sol --sig "queueWithdrawalFromEigenLayer(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input
 
 
+staker-notify-service-about-withdrawal: ## Staker notifies the AVS about its intention to withdraw
+	forge script script/playbooks/Stakers.s.sol --sig "notifyServiceAboutWithdrawal(string memory avsConfigFile, string memory queuedWithdrawalOutputFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input queueWithdrawalFromEigenLayer-latest
+
+
 staker-completed-queued-withdrawal: ## Complete queued withdrawals from the staker in EigenLayer
 # TODO: queueWithdrawalFromEigenLayer-latest has been copied from the broadcast folder but this is just a hacky way
 	forge script script/playbooks/Stakers.s.sol --sig "completeQueuedWithdrawalFromEigenLayer(string memory avsConfigFile, string memory queuedWithdrawalOutputFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input queueWithdrawalFromEigenLayer-latest
@@ -75,3 +79,7 @@ print-operators-status: ## Print status of all operators from config file playgr
 
 print-stakers-status: ## Print status of all stakers from config file playground_avs_input.json
 	forge script script/playbooks/Stakers.s.sol --sig "printStatusOfStakersFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} playground_avs_input
+
+
+print-staker-withdrawal-status: ## Print status of all withdrawals of stakers
+	forge script script/playbooks/Stakers.s.sol --sig "printStatusOfStakerForWithdrawals(string memory avsConfigFile)" --rpc-url ${RPC_URL} queueWithdrawalFromEigenLayer-latest

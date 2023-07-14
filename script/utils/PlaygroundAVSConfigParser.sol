@@ -22,6 +22,7 @@ import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
 contract PlaygroundAVSConfigParser is Script, Test, Utils {
+    // TODO: add the address of the operator to whom the staker has delegated here, easy for access
     struct Staker {
         address addr;
         uint256 privateKey;
@@ -124,7 +125,7 @@ contract PlaygroundAVSConfigParser is Script, Test, Utils {
 
     function parseBlockNumberAndOperatorDetailsFromQueuedWithdrawal(
         string memory queuedWithdrawalOutputFile
-    ) public returns (uint32, address) {
+    ) public returns (uint32, address[] memory, bytes32[] memory) {
         string memory queuedWithdrawalOutput = vm.readFile("broadcast/Stakers.s.sol/5/queueWithdrawalFromEigenLayer-latest.json");
         uint32 blockNumber = uint32(stdJson.readUint(
             queuedWithdrawalOutput,
@@ -140,19 +141,52 @@ contract PlaygroundAVSConfigParser is Script, Test, Utils {
         address depositor;
         uint96 nonce;
         address withdrawer;
-        address delegatedAddress;
+        address delegatedOperatorAddress;
         bytes32 withdrawalRoot;
-        (depositor, nonce, withdrawer, delegatedAddress, withdrawalRoot)  = abi.decode(
+        (depositor, nonce, withdrawer, delegatedOperatorAddress, withdrawalRoot)  = abi.decode(
             eventData,
             (address, uint96, address, address, bytes32)
         );
-        emit log_named_address("depositor", depositor);
-        emit log_named_uint("nonce", nonce);
-        emit log_named_address("withdrawer", withdrawer);
-        emit log_named_address("delegatedAddress", delegatedAddress);
-        emit log_named_bytes32("withdrawalRoot", withdrawalRoot);
+        // emit log_named_address("depositor", depositor);
+        // emit log_named_uint("nonce", nonce);
+        // emit log_named_address("withdrawer", withdrawer);
+        // emit log_named_address("delegatedAddress", delegatedOperatorAddress);
+        // emit log_named_bytes32("withdrawalRoot", withdrawalRoot);
 
-        return (blockNumber, delegatedAddress);
+        // TODO: Right now we are assuming there is only one queued withdrawal at any time.
+        // Need to make this more general for more than one queued withdrawals existing at the same time
+        address[] memory arrDelegatedOperatorAddrForQueuedWithdrawals = new address[](1);
+        arrDelegatedOperatorAddrForQueuedWithdrawals[0] = delegatedOperatorAddress;
+
+        // TODO: Right now we are assuming there is only one queued withdrawal at any time.
+        // Need to make this more general for more than one queued withdrawals existing at the same time
+        bytes32[] memory withdrawalRootArr = new bytes32[](1);
+        withdrawalRootArr[0] = withdrawalRoot;
+
+        return (blockNumber, arrDelegatedOperatorAddrForQueuedWithdrawals, withdrawalRootArr);
+    }
+
+    // TODO: change the output of this function to comply with multiple staker withdrawals
+    function parseQueuedWithdrawalDetails(
+        string memory queuedWithdrawalOutputFile
+    ) public returns (address, address[] memory, uint256[] memory) {
+        string memory queuedWithdrawalFileOutput = vm.readFile("script/output/5/queue_withdrawal_output.json");
+        address staker = stdJson.readAddress(
+            queuedWithdrawalFileOutput,
+            ".staker.staker_address"
+        );
+
+        address[] memory strategyAddresses = stdJson.readAddressArray(
+            queuedWithdrawalFileOutput,
+            ".strategies.strategy_addresses"
+        );
+
+        uint256[] memory shares = stdJson.readUintArray(
+            queuedWithdrawalFileOutput,
+            ".shares.shares"
+        );
+
+        return (staker, strategyAddresses, shares);
     }
 
 
