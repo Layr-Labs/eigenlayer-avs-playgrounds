@@ -10,6 +10,8 @@ make opt-operators-into-slashing-by-avs
 make register-operators-with-avs
 make staker-queue-withdrawal
 make staker-notify-service-about-withdrawal
+# no freaking clue why this helps but without this
+# anvil was getting in some weird infinite loop bug
 sleep 1
 make advanceChainBy100Blocks
 make staker-complete-queued-withdrawal
