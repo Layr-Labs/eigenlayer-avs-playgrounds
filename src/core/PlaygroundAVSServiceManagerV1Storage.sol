@@ -17,7 +17,7 @@ abstract contract PlaygroundAVSServiceManagerV1Storage is IPlaygroundAVSServiceM
     // CONSTANTS
 
     /// @notice Unit of measure (in blocks) for which data will be stored for after confirmation.
-    uint32 public constant TASK_DURATION_BLOCKS = 2 weeks / 12 seconds;
+    uint32 public constant TASK_DURATION_BLOCKS = 0;
 
     /**
      * @notice The maximum amount of blocks in the past that the service will caonsider stake amounts to still be 'valid'.
@@ -27,7 +27,7 @@ abstract contract PlaygroundAVSServiceManagerV1Storage is IPlaygroundAVSServiceM
      * time that nodes can be active after they have deregistered. The larger it is, the farther back stakes can be used, but the longer operators
      * have to serve after they've deregistered.
      */
-    uint32 public constant BLOCK_STALE_MEASURE = 150;
+    uint32 public constant BLOCK_STALE_MEASURE = 0;
 
     /// @notice The current task number
     uint32 public taskNum;

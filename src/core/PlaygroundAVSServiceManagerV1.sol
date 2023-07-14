@@ -54,6 +54,17 @@ contract PlaygroundAVSServiceManagerV1 is
         _;
     }
 
+    /// @notice when applied to a function, ensures that the function is only callable by the `registryCoordinator`.
+    /// or by StakeRegistry
+    modifier onlyRegistryCoordinatorOrStakeRegistry() {
+        require(
+            (msg.sender == address(registryCoordinator)) || 
+            (msg.sender == address(IBLSRegistryCoordinatorWithIndices(address(registryCoordinator)).stakeRegistry())),
+            "onlyRegistryCoordinatorOrStakeRegistry: not from registry coordinator or stake registry"
+        );
+        _;
+    }
+
     constructor(
         IBLSRegistryCoordinatorWithIndices _registryCoordinator,
         IStrategyManager _strategyManager,
@@ -107,7 +118,7 @@ contract PlaygroundAVSServiceManagerV1 is
         uint32 updateBlock,
         uint32 serveUntilBlock,
         uint256 prevElement
-    ) external onlyRegistryCoordinator {
+    ) external onlyRegistryCoordinatorOrStakeRegistry {
         slasher.recordStakeUpdate(
             operator,
             updateBlock,

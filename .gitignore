@@ -8,6 +8,7 @@ out/
 script/output/31337/*.json
 # we don't share the avs deployments, even on chainid 5, because local forks of goerli have chainid 5
 script/output/**/playground_avs_deployment_output.json
+script/output/**/queue_withdrawal_output.json
 
 # Docs
 docs/
