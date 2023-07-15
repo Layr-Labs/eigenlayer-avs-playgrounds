@@ -13,11 +13,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract Stakers is Script, PlaygroundAVSConfigParser {
     Vm cheats = Vm(HEVM_ADDRESS);
 
-    // @TODO: see if we can make them memory
-    mapping(address => IStrategy[])
-        public allStrategiesWhereWithdrawalHappening;
-    mapping(address => uint256[])
-        public sharesInStrategiesWhereWithdrawalHappening;
 
     function delegateToOperators(string memory avsConfigFile) external {
         Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
@@ -89,58 +84,28 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         /* parsing avsConfigFile for stakers that are to be withdrawn */
         Staker[] memory stakersToBeWithdrawn;
         /* getting information on which stakers have to be withdrawn from the json file */
-        stakersToBeWithdrawn = parseConfigFileForStakersToBeWithdrawn(
-            avsConfigFile,
+        stakersToBeWithdrawn = parseWithdrawalRequestFile(
             stakersCurrentlyRestakedOnEigenLayer
         );
 
-        emit log_address(stakersToBeWithdrawn[0].addr);
 
         queueWithdrawalFromEigenLayer(contracts, stakersToBeWithdrawn);
     }
 
-    function notifyServiceAboutWithdrawal(
-        string memory avsConfigFile,
-        string memory queuedWithdrawalOutputFile
-    ) external {
+
+
+    // calling this function would update the record against all operators 
+    function notifyServiceAboutWithdrawal() external {
         Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
             "eigenlayer_deployment_output",
             "playground_avs_deployment_output"
         );
 
-        /* parsing avsConfigFile for info on stakers that are currently restaked in EigenLayer */
-        Staker[] memory stakersCurrentlyRestakedOnEigenLayer;
-        // we are setting number of strategies to 1
-        // TODO: change 1 to length of the dummyTokenStrat field in EigenLayer struct after array format is adopted
-        stakersCurrentlyRestakedOnEigenLayer = parseStakersFromConfigFile(
-            avsConfigFile,
-            1
-        );
-        // emit log_address(stakersCurrentlyRestakedOnEigenLayer[0].addr);
-
-        /* parsing avsConfigFile for stakers that are to be withdrawn */
-        Staker[] memory stakersToBeWithdrawn;
-        /* getting information on which stakers have to be withdrawn from the json file */
-        stakersToBeWithdrawn = parseConfigFileForStakersToBeWithdrawn(
-            avsConfigFile,
-            stakersCurrentlyRestakedOnEigenLayer
-        );
-
-        (
-            uint32 withdrawalStartBlock,
-            address[] memory arrDelegatedOperatorAddrForQueuedWithdrawals,
-            bytes32[] memory withdrawalRoot
-        ) = parseBlockNumberAndOperatorDetailsFromQueuedWithdrawal(
-                queuedWithdrawalOutputFile
-            );
-
-        // emit log_string("here1");
-        notifyService(
-            contracts,
-            stakersToBeWithdrawn,
-            arrDelegatedOperatorAddrForQueuedWithdrawals
-        );
+        notifyService(contracts);
     }
+
+
+
 
     function completeQueuedWithdrawalFromEigenLayer(
         string memory avsConfigFile,
@@ -151,59 +116,119 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
             "playground_avs_deployment_output"
         );
 
-        /* parsing avsConfigFile for info on stakers that are currently restaked in EigenLayer */
-        Staker[] memory stakersCurrentlyRestakedOnEigenLayer;
-        // we are setting number of strategies to 1
-        // TODO: change 1 to length of the dummyTokenStrat field in EigenLayer struct after array format is adopted
-        stakersCurrentlyRestakedOnEigenLayer = parseStakersFromConfigFile(
-            avsConfigFile,
-            1
-        );
-        // emit log_address(stakersCurrentlyRestakedOnEigenLayer[0].addr);
+        // /* parsing avsConfigFile for info on stakers that are currently restaked in EigenLayer */
+        // Staker[] memory stakersCurrentlyRestakedOnEigenLayer;
+        // // we are setting number of strategies to 1
+        // // TODO: change 1 to length of the dummyTokenStrat field in EigenLayer struct after array format is adopted
+        // stakersCurrentlyRestakedOnEigenLayer = parseStakersFromConfigFile(
+        //     avsConfigFile,
+        //     1
+        // );
+        // // emit log_address(stakersCurrentlyRestakedOnEigenLayer[0].addr);
 
-        (
-            uint32 withdrawalStartBlock,
-            address[] memory arrDelegatedOperatorAddrForQueuedWithdrawals,
-            bytes32[] memory withdrawalRoot
-        ) = parseBlockNumberAndOperatorDetailsFromQueuedWithdrawal(
-                queuedWithdrawalOutputFile
-            );
-        (
-            address stakerToBeWithdrawn,
-            address[] memory strategyAddresses,
-            uint256[] memory shares
-        ) = parseQueuedWithdrawalDetails(queuedWithdrawalOutputFile);
+        // (
+        //     uint32 withdrawalStartBlock,
+        //     address[] memory arrDelegatedOperatorAddrForQueuedWithdrawals,
+        //     bytes32[] memory withdrawalRoot
+        // ) = parseBlockNumberAndOperatorDetailsFromQueuedWithdrawal(
+        //         queuedWithdrawalOutputFile
+        //     );
+        // (
+        //     address stakerToBeWithdrawn,
+        //     address[] memory strategyAddresses,
+        //     uint256[] memory shares
+        // ) = parseQueuedWithdrawalDetails(queuedWithdrawalOutputFile);
 
-        // TODO: get stakersToBeWithdrawn from above parsing of json file
-        /* parsing avsConfigFile for stakers that are to be withdrawn */
-        Staker[] memory stakersToBeWithdrawn;
-        /* getting information on which stakers have to be withdrawn from the json file */
-        stakersToBeWithdrawn = parseConfigFileForStakersToBeWithdrawn(
-            avsConfigFile,
-            stakersCurrentlyRestakedOnEigenLayer
-        );
+        // // TODO: get stakersToBeWithdrawn from above parsing of json file
+        // /* parsing avsConfigFile for stakers that are to be withdrawn */
+        // Staker[] memory stakersToBeWithdrawn;
+        // /* getting information on which stakers have to be withdrawn from the json file */
+        // stakersToBeWithdrawn = parseWithdrawalRequestFile(
+        //     stakersCurrentlyRestakedOnEigenLayer
+        // );
 
-        // emit log_string("here2");
-        // get middlewareTimesIndex index
-        /* 
-            TODO: change it to also consider multiple AVS scenario. Right now it is okay for 
-            single AVS case.
-        */
-        uint256 middlewareTimesIndex = 1;
-        for (uint i = 0; i < stakersToBeWithdrawn.length; i++) {
-            // TODO: following method works only if there is only one pending withdrawal
-            // because every time a new queue withdrawal happens, the latest file in
-            // broadcast folder changes.
-            completeQueuedWithdrawal(
-                contracts,
-                stakersToBeWithdrawn[i],
-                withdrawalStartBlock,
+
+        /* READ JSON DATA */
+        QueuedWithdrawalOutput[] memory queuedWithdrawalsArr = readQueuedWithdrawalsDetails(0);
+        bool receiveAsTokens = true;
+
+        for (uint i = 0; i < queuedWithdrawalsArr.length; i++) {
+            /* prepare the inputs for calling completeQueuedWithdrawals() */
+        
+            // prepare the input "queuedWithdrawals"
+            IStrategyManager.QueuedWithdrawal memory completequeuedWithdrwalInput;
+            
+            IStrategy[] memory strategiesToBeWithdrawnFrom = new IStrategy[](queuedWithdrawalsArr[i].addressOfStrategiesToBeWithdrawnFrom.length);
+            for (uint j = 0; j < queuedWithdrawalsArr[i].addressOfStrategiesToBeWithdrawnFrom.length; j++) {
+                strategiesToBeWithdrawnFrom[j] = IStrategy(queuedWithdrawalsArr[i].addressOfStrategiesToBeWithdrawnFrom[j]);    
+            }
+
+            completequeuedWithdrwalInput.strategies = strategiesToBeWithdrawnFrom;
+            completequeuedWithdrwalInput.shares = queuedWithdrawalsArr[i].sharesToBeWithdrawn;
+            completequeuedWithdrwalInput.depositor = queuedWithdrawalsArr[i].stakerAddr;
+            completequeuedWithdrwalInput.withdrawalStartBlock = queuedWithdrawalsArr[i].withdrawalStartBlock;
+            completequeuedWithdrwalInput.delegatedAddress = queuedWithdrawalsArr[i].operatorAddr;
+            completequeuedWithdrwalInput.withdrawerAndNonce.withdrawer = queuedWithdrawalsArr[i].stakerAddr;
+            completequeuedWithdrwalInput.withdrawerAndNonce.nonce = queuedWithdrawalsArr[i].nonce;  
+
+            emit log_named_bytes32(
+                        "Computed root from reconstructed QueuedWithdrawal:",
+                        contracts.eigenlayer.strategyManager.calculateWithdrawalRoot(
+                            completequeuedWithdrwalInput
+                        ));
+
+
+            // prepare the input "middlewareTimesIndexes"
+            uint256 middlewareTimesIndex; 
+            middlewareTimesIndex = queuedWithdrawalsArr[i].middlewareTimesIndexForWithdrawal;
+            
+
+            // prepare the input "tokens"
+            IERC20[] memory tokens = new IERC20[](completequeuedWithdrwalInput.strategies.length);
+            for (uint j = 0; j < completequeuedWithdrwalInput.strategies.length; j++) {
+                tokens[j] = completequeuedWithdrwalInput.strategies[j].underlyingToken();
+            }
+
+
+            // complete the queued withdrawal transaction
+            vm.startBroadcast(queuedWithdrawalsArr[i].stakerPrivateKey);
+            contracts.eigenlayer.strategyManager.completeQueuedWithdrawal(
+                completequeuedWithdrwalInput,
+                tokens,
                 middlewareTimesIndex,
-                arrDelegatedOperatorAddrForQueuedWithdrawals[i],
-                strategyAddresses,
-                shares
+                receiveAsTokens
             );
+            vm.stopBroadcast();
+
         }
+
+        vm.writeFile("script/output/5/modified_queue_withdrawal_output.json", "");
+
+        
+
+
+
+        // // emit log_string("here2");
+        // // get middlewareTimesIndex index
+        // /* 
+        //     TODO: change it to also consider multiple AVS scenario. Right now it is okay for 
+        //     single AVS case.
+        // */
+        // uint256 middlewareTimesIndex = 1;
+        // for (uint i = 0; i < stakersToBeWithdrawn.length; i++) {
+        //     // TODO: following method works only if there is only one pending withdrawal
+        //     // because every time a new queue withdrawal happens, the latest file in
+        //     // broadcast folder changes.
+        //     completeQueuedWithdrawal(
+        //         contracts,
+        //         stakersToBeWithdrawn[i],
+        //         withdrawalStartBlock,
+        //         middlewareTimesIndex,
+        //         arrDelegatedOperatorAddrForQueuedWithdrawals[i],
+        //         strategyAddresses,
+        //         shares
+        //     );
+        // }
     }
 
     function allocateTokenToStakers(
@@ -305,15 +330,48 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         Contracts memory contracts,
         Staker[] memory stakersToBeWithdrawn
     ) public {
+        
+        QueuedWithdrawalOutput[] memory queuedWithdrawalOutputArr = new QueuedWithdrawalOutput[](stakersToBeWithdrawn.length);
+        
         // TODO: change the json file input of this function to comply with multiple staker withdrawals
         for (uint i = 0; i < stakersToBeWithdrawn.length; i++) {
-            vm.startBroadcast(stakersToBeWithdrawn[i].privateKey);
+            // TODO: check if staker has not already queued withdrawal or not
 
-            // get details on the staker's shares and the strategy
+            /* storing the necessary data for completing queued withdrawal */
+            queuedWithdrawalOutputArr[i].stakerAddr =  stakersToBeWithdrawn[i].addr;
+            queuedWithdrawalOutputArr[i].stakerPrivateKey = stakersToBeWithdrawn[i].privateKey;
+            
+            
+            vm.startBroadcast(stakersToBeWithdrawn[i].privateKey);
+            
+            // emit log_uint(StrategyManager(address(contracts.eigenlayer.strategyManager))
+            //                                 .numWithdrawalsQueued(stakersToBeWithdrawn[i].addr)
+            //                             );
+            queuedWithdrawalOutputArr[i].nonce = uint96(
+                                        StrategyManager(address(contracts.eigenlayer.strategyManager))
+                                            .numWithdrawalsQueued(stakersToBeWithdrawn[i].addr)
+                                        );
+
+            queuedWithdrawalOutputArr[i].operatorAddr = contracts
+                                                        .eigenlayer.
+                                                        delegationManager.
+                                                        delegatedTo(stakersToBeWithdrawn[i].addr); 
+             
+
             (IStrategy[] memory strategies, uint256[] memory shares) = contracts
                 .eigenlayer
                 .strategyManager
                 .getDeposits(stakersToBeWithdrawn[i].addr);
+            
+            address[] memory strategyAddresses = new address[](strategies.length);
+            for (uint j = 0; j < strategies.length; j++) {
+                strategyAddresses[j] = address(strategies[j]);
+            }
+            
+            queuedWithdrawalOutputArr[i].addressOfStrategiesToBeWithdrawnFrom = strategyAddresses;
+            queuedWithdrawalOutputArr[i].sharesToBeWithdrawn = shares;
+                                 
+            
 
             // queue withdrawal from EigenLayer
             /* 
@@ -323,6 +381,10 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
             uint256[] memory strategyIndexes = new uint256[](1);
             strategyIndexes[0] = 0;
             bytes32 withdrawalRoot;
+
+
+            // currently withdrawal means every share is withdrawan from every strategy
+            // TODO (@Soubhik): make it flexible and have shares + strategy passed by the user
             withdrawalRoot = contracts
                 .eigenlayer
                 .strategyManager
@@ -336,21 +398,9 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
                 );
 
             vm.stopBroadcast();
+            // TODO (Soubhik): this is just hacky way, find a proper resolutions
+            queuedWithdrawalOutputArr[i].withdrawalStartBlock = uint32(block.number) + uint32(i) + 1;
 
-            allStrategiesWhereWithdrawalHappening[
-                stakersToBeWithdrawn[i].addr
-            ] = strategies;
-            sharesInStrategiesWhereWithdrawalHappening[
-                stakersToBeWithdrawn[i].addr
-            ] = shares;
-
-            // get an array of strategy addresses
-            address[] memory strategyAddresses = new address[](
-                strategies.length
-            );
-            for (uint j = 0; j < strategies.length; j++) {
-                strategyAddresses[j] = address(strategies[j]);
-            }
 
             // WRITE JSON DATA
             string memory parent_object = "parent object";
@@ -393,49 +443,109 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
             );
 
             writeOutput(finalJson, "queue_withdrawal_output");
+            
         }
+
+        parseAndUpdateQueuedWithdrawalsDetails(queuedWithdrawalOutputArr);
+
+        // for (uint i = 0; i < completeQueuedWithdrawalInputArr.length; i++) {
+        //     emit log_named_bytes32("withdrawal root", completeQueuedWithdrawalInputArr[i].withdrawalRoot);
+        // }
     }
 
     function notifyService(
-        Contracts memory contracts,
-        Staker[] memory stakersToBeWithdrawn,
-        address[] memory arrDelegatedOperatorAddrForQueuedWithdrawals
+        Contracts memory contracts
     ) public {
-        /* getting the IDs of the operators */
+        
+        /* READ JSON DATA */
+        QueuedWithdrawalOutput[] memory queuedWithdrawalOutputArr = readQueuedWithdrawalsDetails(0);
+        
+        // collect the addresses of the stakers that are withdrawing and their corresponding operators
+        address[] memory addressesOfOperatorsForStakersWithdrawing = new address[](queuedWithdrawalOutputArr.length);
+        address[] memory addressesOfStakersWithdrawing = new address[](queuedWithdrawalOutputArr.length);
+        for (uint i = 0; i < queuedWithdrawalOutputArr.length; i++) {
+            addressesOfStakersWithdrawing[i] = queuedWithdrawalOutputArr[i].stakerAddr;
+            addressesOfOperatorsForStakersWithdrawing[i] = queuedWithdrawalOutputArr[i].operatorAddr;   
+        }
+
+
+        // collect the addresses of unique operators 
+        address[] memory sanitizedAddressesOfOperatorsForStakersWithdrawing = new address[](addressesOfOperatorsForStakersWithdrawing.length);
+        uint counter = 0;
+        for (uint i = 0; i < addressesOfOperatorsForStakersWithdrawing.length; i++) {
+            bool anyMatch = false;
+
+            for (uint j = 0; j <= counter; j++) {
+                if (sanitizedAddressesOfOperatorsForStakersWithdrawing[j] == addressesOfOperatorsForStakersWithdrawing[i]) {
+                    anyMatch = true;
+                    // TODO: use break?
+                }
+            }
+
+            // new operator address being added
+            if (anyMatch == false) {
+                sanitizedAddressesOfOperatorsForStakersWithdrawing[counter] = addressesOfOperatorsForStakersWithdrawing[i];
+                counter  = counter + 1;
+            }
+        }
+        
+        // get a clipped array, necessary for calling updateStake()
+        address[] memory sanitizedAddressesOfOperatorsForStakersWithdrawingClipped = new address[](counter);
+        for (uint i = 0; i < sanitizedAddressesOfOperatorsForStakersWithdrawingClipped.length; i++) {
+            sanitizedAddressesOfOperatorsForStakersWithdrawingClipped[i] = sanitizedAddressesOfOperatorsForStakersWithdrawing[i];
+        }
+
+
+        // getting the IDs of the operators 
         bytes32[] memory idsOfOperatorDelegatedTo = new bytes32[](
-            stakersToBeWithdrawn.length
+            counter
         );
-        for (uint i = 0; i < stakersToBeWithdrawn.length; i++) {
+        for (uint i = 0; i < sanitizedAddressesOfOperatorsForStakersWithdrawingClipped.length; i++) {
             vm.startBroadcast();
             idsOfOperatorDelegatedTo[i] = contracts
-                .playgroundAVS
-                .registryCoordinator
-                .getOperator(arrDelegatedOperatorAddrForQueuedWithdrawals[i])
-                .operatorId;
+                                            .playgroundAVS
+                                            .registryCoordinator
+                                            .getOperator(sanitizedAddressesOfOperatorsForStakersWithdrawingClipped[i])
+                                            .operatorId;
             vm.stopBroadcast();
         }
 
+       
         /* setting the element indices in the linked list _operatorToWhitelistedContractsByUpdate */
         uint256[] memory prevElementArray = new uint256[](
-            stakersToBeWithdrawn.length
+            counter
         );
         // @TODO change this to more general. For now, there is only one middleware
-        for (uint i = 0; i < stakersToBeWithdrawn.length; i++) {
+        for (uint i = 0; i < sanitizedAddressesOfOperatorsForStakersWithdrawingClipped.length; i++) {
             prevElementArray[i] = 0;
         }
 
         // call AVS's StakeRegistry for notifying the intention to withdraw
-        vm.startBroadcast(stakersToBeWithdrawn[0].privateKey);
+        vm.startBroadcast(0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d);
         contracts
             .playgroundAVS
             .registryCoordinator
             .stakeRegistry()
             .updateStakes(
-                arrDelegatedOperatorAddrForQueuedWithdrawals,
+                sanitizedAddressesOfOperatorsForStakersWithdrawingClipped,
                 idsOfOperatorDelegatedTo,
                 prevElementArray
             );
         vm.stopBroadcast();
+
+
+        // get middlewareTimeIndex for each of the stakers withdrawing
+        uint256[] memory middlewareTimesIndicesOfStakersWithdrawing = new  uint256[](addressesOfOperatorsForStakersWithdrawing.length);
+        for (uint i = 0; i < addressesOfOperatorsForStakersWithdrawing.length; i++) {
+            middlewareTimesIndicesOfStakersWithdrawing[i] = contracts
+                .eigenlayer
+                .slasher
+                .middlewareTimesLength(addressesOfOperatorsForStakersWithdrawing[i]) - 1;
+        }
+
+        // update the json file for queued withdrawals
+        recordServiceNotification(addressesOfStakersWithdrawing, middlewareTimesIndicesOfStakersWithdrawing);
+        
     }
 
     function completeQueuedWithdrawal(
@@ -583,7 +693,9 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
             "playground_avs_deployment_output"
         );
 
+        
         emit log_named_address("staker address", stakerAddr);
+        
 
         bool isDelegated = contracts.eigenlayer.delegationManager.isDelegated(
             stakerAddr

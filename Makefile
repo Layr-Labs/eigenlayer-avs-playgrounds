@@ -60,7 +60,7 @@ staker-queue-withdrawal: ## Queue withdrawals from the staker in EigenLayer
 
 
 staker-notify-service-about-withdrawal: ## Staker notifies the AVS about its intention to withdraw
-	forge script script/playbooks/Stakers.s.sol --sig "notifyServiceAboutWithdrawal(string memory avsConfigFile, string memory queuedWithdrawalOutputFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input queueWithdrawalFromEigenLayer-latest
+	forge script script/playbooks/Stakers.s.sol --sig "notifyServiceAboutWithdrawal()" --rpc-url ${RPC_URL} -vvvv --broadcast
 
 advanceChainBy100Blocks: ## Advance chain to permit completing the withdrawal
 	forge script script/utils/Utils.sol --sig "advanceChainByNBlocks(uint256 n)" --rpc-url ${RPC_URL} --private-key ${PRIVATE_KEY} --broadcast 100

@@ -501,7 +501,11 @@ contract EigenLayerDeploy is Script, Test, Utils {
             deployed_addresses,
             deployed_addresses_output
         );
-        vm.serializeString(parent_object, chain_info, chain_info_output);
+        vm.serializeString(
+            parent_object, 
+            chain_info, 
+            chain_info_output
+        );
         string memory finalJson = vm.serializeString(
             parent_object,
             parameters,
