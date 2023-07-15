@@ -17,7 +17,7 @@ contract Utils is Script {
         for (uint256 i = 0; i < tos.length; i++) {
             IERC20 underlyingToken = StrategyBase(strategyAddress)
                 .underlyingToken();
-            underlyingToken.transferFrom(tos[i], tos[i], amounts[i]);
+            underlyingToken.transferFrom(0x460fB1B764D410F4f23Bb0cd25A96ba51784a9b6, tos[i], amounts[i]);
         }
     }
 

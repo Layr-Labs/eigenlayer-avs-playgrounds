@@ -43,10 +43,6 @@ contract PlaygroundAVSConfigParser is Script, Test, Utils {
         uint256 middlewareTimesIndexForWithdrawal;
     }
 
-    // struct NotifyServiceOutput {
-    //     bool set;
-    //     uint256 middlewareTimesIndex;
-    // }
 
     struct Operator {
         uint256 ECDSAPrivateKey;
@@ -566,29 +562,6 @@ contract PlaygroundAVSConfigParser is Script, Test, Utils {
         withdrawalRootArr[0] = withdrawalRoot;
 
         return (blockNumber, arrDelegatedOperatorAddrForQueuedWithdrawals, withdrawalRootArr);
-    }
-
-    // TODO: change the output of this function to comply with multiple staker withdrawals
-    function parseQueuedWithdrawalDetails(
-        string memory queuedWithdrawalOutputFile
-    ) public returns (address, address[] memory, uint256[] memory) {
-        string memory queuedWithdrawalFileOutput = vm.readFile("script/output/5/queue_withdrawal_output.json");
-        address staker = stdJson.readAddress(
-            queuedWithdrawalFileOutput,
-            ".staker.staker_address"
-        );
-
-        address[] memory strategyAddresses = stdJson.readAddressArray(
-            queuedWithdrawalFileOutput,
-            ".strategies.strategy_addresses"
-        );
-
-        uint256[] memory shares = stdJson.readUintArray(
-            queuedWithdrawalFileOutput,
-            ".shares.shares"
-        );
-
-        return (staker, strategyAddresses, shares);
     }
 
 

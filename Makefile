@@ -48,8 +48,12 @@ deregister-operators-with-avs: ##
 
 -----------------------------: ## 
 __STAKER_INTERACTIONS__: ## Below commands read from script/input/5/playground_avs_input.json
-staker-mint-tokens-and-deposit-into-strategies: ## Allocate tokens to stakers and do delegations of stakers to operators
-	forge script script/playbooks/Stakers.s.sol --sig "allocateTokensToStakersAndDepositIntoStrategies(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input 
+staker-mint-tokens: ## Allocate tokens to stakers and do delegations of stakers to operators
+	forge script script/playbooks/Stakers.s.sol --sig "mintTokensToStakers(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input 
+
+staker-deposit-into-strategies: ## Deposit tokens with startegies
+	forge script script/playbooks/Stakers.s.sol --sig "depositIntoStrategies(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input 
+
 
 staker-delegate-to-operators: ## Allocate tokens to stakers and do delegations of stakers to operators
 	forge script script/playbooks/Stakers.s.sol --sig "delegateToOperators(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input 
@@ -67,7 +71,7 @@ advanceChainBy100Blocks: ## Advance chain to permit completing the withdrawal
 
 staker-complete-queued-withdrawal: ## Complete queued withdrawals from the staker in EigenLayer
 # TODO: queueWithdrawalFromEigenLayer-latest has been copied from the broadcast folder but this is just a hacky way
-	forge script script/playbooks/Stakers.s.sol --sig "completeQueuedWithdrawalFromEigenLayer(string memory avsConfigFile, string memory queuedWithdrawalOutputFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input queueWithdrawalFromEigenLayer-latest
+	forge script script/playbooks/Stakers.s.sol --sig "completeQueuedWithdrawalFromEigenLayer()" --rpc-url ${RPC_URL} -vvvv --broadcast
 
 
 -----------------------------: ## 

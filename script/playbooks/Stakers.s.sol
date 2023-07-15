@@ -9,6 +9,7 @@ import "../utils/Utils.sol";
 import "./Operators.s.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract Stakers is Script, PlaygroundAVSConfigParser {
     Vm cheats = Vm(HEVM_ADDRESS);
@@ -35,7 +36,7 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         delegateToOperators(stakers, operators, contracts);
     }
 
-    function allocateTokensToStakersAndDepositIntoStrategies(
+    function mintTokensToStakers(
         string memory avsConfigFile
     ) external {
         Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
@@ -53,15 +54,98 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         // TODO: change 1 to length of the dummyTokenStrat field in EigenLayer struct after array format is adopted
         address[] memory strategyAddresses = new address[](1);
         strategyAddresses[0] = address(contracts.eigenlayer.dummyTokenStrat);
-        allocateTokenToStakers(stakers, strategyAddresses);
+        // allocateTokenToStakers(stakers, strategyAddresses);
 
-        // parsing avsConfigFile for operators
-        Operator[] memory operators = parseOperatorsFromConfigFile(
-            avsConfigFile
+
+        /* collect all the staker addresses in one array */
+        address[] memory stakerAddresses = new address[](stakers.length);
+        for (uint i = 0; i < stakers.length; i++) {
+            stakerAddresses[i] = stakers[i].addr;
+        }
+
+        // For each strategy, allocate the corresponding tokens associated to stakers
+        for (uint i = 0; i < strategyAddresses.length; i++) {
+            /* 
+                collect the amount of tokens allocated to each staker for the token 
+                corresponding to strategy i 
+            */
+            uint256[] memory tokenAllocatedToStakers = new uint256[](
+                stakers.length
+            );
+            for (uint j = 0; j < stakers.length; j++) {
+                tokenAllocatedToStakers[j] = stakers[j].stakeAllocated[i];
+            }
+
+            // TODO: access Anvil private key instead of hardcoding it
+            vm.startBroadcast(
+                0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+            );
+            _allocate(
+                strategyAddresses[i],
+                stakerAddresses,
+                tokenAllocatedToStakers
+            );
+            vm.stopBroadcast();
+        }
+
+    }
+
+
+    function depositIntoStrategies(
+        string memory avsConfigFile
+    ) external {
+        Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
+            "eigenlayer_deployment_output",
+            "playground_avs_deployment_output"
         );
 
-        depositIntoStrategies(stakers, operators, contracts);
+        /* parsing avsConfigFile for stakers */
+        Staker[] memory stakers;
+        stakers = parseStakersFromConfigFile(avsConfigFile, 1);
+
+
+        // Stakers deposit with strategies
+        for (uint256 i = 0; i < stakers.length; i++) {
+            vm.startBroadcast(stakers[i].privateKey);
+
+            uint256 tokenAmt = contracts
+                                .eigenlayer
+                                .dummyTokenStrat
+                                .underlyingToken()
+                                .balanceOf(stakers[i].addr);
+
+
+            if (tokenAmt > 0) {
+                contracts
+                    .eigenlayer
+                    .dummyTokenStrat
+                    .underlyingToken()
+                    .approve(
+                        address(contracts.eigenlayer.strategyManager),
+                        tokenAmt
+                    );
+                emit log_uint(tokenAmt);
+
+                /* 
+                    Staker i deposits `stakeAllocated` amount of `token` into the specified 
+                    `strategy`
+                */
+                uint256 shares = contracts
+                    .eigenlayer
+                    .strategyManager
+                    .depositIntoStrategy(
+                        contracts.eigenlayer.dummyTokenStrat,
+                        contracts.eigenlayer.dummyTokenStrat.underlyingToken(),
+                        tokenAmt
+                    );
+
+                emit log_uint(shares);
+
+            }
+            vm.stopBroadcast();
+        }
     }
+
 
     function queueWithdrawalFromEigenLayer(
         string memory avsConfigFile
@@ -73,13 +157,13 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
 
         /* parsing avsConfigFile for info on stakers that are currently restaked in EigenLayer */
         Staker[] memory stakersCurrentlyRestakedOnEigenLayer;
+        
         // we are setting number of strategies to 1
         // TODO: change 1 to length of the dummyTokenStrat field in EigenLayer struct after array format is adopted
         stakersCurrentlyRestakedOnEigenLayer = parseStakersFromConfigFile(
             avsConfigFile,
             1
         );
-        // emit log_address(stakersCurrentlyRestakedOnEigenLayer[0].addr);
 
         /* parsing avsConfigFile for stakers that are to be withdrawn */
         Staker[] memory stakersToBeWithdrawn;
@@ -89,7 +173,72 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         );
 
 
-        queueWithdrawalFromEigenLayer(contracts, stakersToBeWithdrawn);
+        QueuedWithdrawalOutput[] memory queuedWithdrawalOutputArr = new QueuedWithdrawalOutput[](stakersToBeWithdrawn.length);
+        
+        for (uint i = 0; i < stakersToBeWithdrawn.length; i++) {
+
+            /* storing the necessary data for completing queued withdrawal */
+            queuedWithdrawalOutputArr[i].stakerAddr =  stakersToBeWithdrawn[i].addr;
+            queuedWithdrawalOutputArr[i].stakerPrivateKey = stakersToBeWithdrawn[i].privateKey;
+            
+            
+            vm.startBroadcast(stakersToBeWithdrawn[i].privateKey);
+            
+            queuedWithdrawalOutputArr[i].nonce = uint96(
+                                        StrategyManager(address(contracts.eigenlayer.strategyManager))
+                                            .numWithdrawalsQueued(stakersToBeWithdrawn[i].addr)
+                                        );
+
+            queuedWithdrawalOutputArr[i].operatorAddr = contracts
+                                                        .eigenlayer.
+                                                        delegationManager.
+                                                        delegatedTo(stakersToBeWithdrawn[i].addr); 
+             
+
+            (IStrategy[] memory strategies, uint256[] memory shares) = contracts
+                .eigenlayer
+                .strategyManager
+                .getDeposits(stakersToBeWithdrawn[i].addr);
+            
+            address[] memory strategyAddresses = new address[](strategies.length);
+            for (uint j = 0; j < strategies.length; j++) {
+                strategyAddresses[j] = address(strategies[j]);
+            }
+            
+            queuedWithdrawalOutputArr[i].addressOfStrategiesToBeWithdrawnFrom = strategyAddresses;
+            queuedWithdrawalOutputArr[i].sharesToBeWithdrawn = shares;
+                                 
+            
+
+            /* queue withdrawal from EigenLayer */
+            // currently withdrawal means every share is withdrawn from every strategy
+            // TODO : make it flexible and have shares + strategy passed by the user
+            uint256[] memory strategyIndexes = new uint256[](strategyAddresses.length);
+            for (uint j = 0; j < strategyAddresses.length; j++) {
+                strategyIndexes[j] = j;
+            }
+            bytes32 withdrawalRoot;
+
+
+
+            withdrawalRoot = contracts
+                .eigenlayer
+                .strategyManager
+                .queueWithdrawal(
+                    strategyIndexes,
+                    strategies,
+                    shares,
+                    // set the withdrawer to be staker itself
+                    stakersToBeWithdrawn[i].addr,
+                    true
+                );
+
+            vm.stopBroadcast();
+            // TODO (Soubhik): this is just hacky way, find a proper resolutions
+            queuedWithdrawalOutputArr[i].withdrawalStartBlock = uint32(block.number) + uint32(i) + 1;
+            
+        }
+        parseAndUpdateQueuedWithdrawalsDetails(queuedWithdrawalOutputArr);
     }
 
 
@@ -194,11 +343,7 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
 
 
 
-
-    function completeQueuedWithdrawalFromEigenLayer(
-        string memory avsConfigFile,
-        string memory queuedWithdrawalOutputFile
-    ) external {
+    function completeQueuedWithdrawalFromEigenLayer() external {
         Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
             "eigenlayer_deployment_output",
             "playground_avs_deployment_output"
@@ -263,77 +408,43 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
 
     }
 
-    function allocateTokenToStakers(
-        Staker[] memory stakers,
-        address[] memory strategyAddresses
-    ) public {
-        /* collect all the staker addresses in one array */
-        address[] memory stakerAddresses = new address[](stakers.length);
-        for (uint i = 0; i < stakers.length; i++) {
-            stakerAddresses[i] = stakers[i].addr;
-        }
+    // function allocateTokenToStakers(
+    //     Staker[] memory stakers,
+    //     address[] memory strategyAddresses
+    // ) public {
+    //     /* collect all the staker addresses in one array */
+    //     address[] memory stakerAddresses = new address[](stakers.length);
+    //     for (uint i = 0; i < stakers.length; i++) {
+    //         stakerAddresses[i] = stakers[i].addr;
+    //     }
 
-        // For each strategy, allocate the corresponding tokens associated to stakers
-        for (uint i = 0; i < strategyAddresses.length; i++) {
-            /* 
-                collect the amount of tokens allocated to each staker for the token 
-                corresponding to strategy i 
-            */
-            uint256[] memory tokenAllocatedToStakers = new uint256[](
-                stakers.length
-            );
-            for (uint j = 0; j < stakers.length; j++) {
-                tokenAllocatedToStakers[j] = stakers[j].stakeAllocated[i];
-            }
+    //     // For each strategy, allocate the corresponding tokens associated to stakers
+    //     for (uint i = 0; i < strategyAddresses.length; i++) {
+    //         /* 
+    //             collect the amount of tokens allocated to each staker for the token 
+    //             corresponding to strategy i 
+    //         */
+    //         uint256[] memory tokenAllocatedToStakers = new uint256[](
+    //             stakers.length
+    //         );
+    //         for (uint j = 0; j < stakers.length; j++) {
+    //             tokenAllocatedToStakers[j] = stakers[j].stakeAllocated[i];
+    //         }
 
-            // TODO: access Anvil private key instead of hardcoding it
-            vm.startBroadcast(
-                0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-            );
-            _allocate(
-                strategyAddresses[i],
-                stakerAddresses,
-                tokenAllocatedToStakers
-            );
-            vm.stopBroadcast();
-        }
-    }
+    //         // TODO: access Anvil private key instead of hardcoding it
+    //         vm.startBroadcast(
+    //             0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+    //         );
+    //         _allocate(
+    //             strategyAddresses[i],
+    //             stakerAddresses,
+    //             tokenAllocatedToStakers
+    //         );
+    //         vm.stopBroadcast();
+    //     }
+    // }
 
-    function depositIntoStrategies(
-        Staker[] memory stakers,
-        Operator[] memory operators,
-        Contracts memory contracts
-    ) public {
-        // Deposit stakers into EigenLayer and delegate to operators
-        for (uint256 i = 0; i < stakers.length; i++) {
-            vm.startBroadcast(stakers[i].privateKey);
-            // TODO: change 1 to length of the dummyTokenStrat field after array format is adopted
-            for (uint j = 0; j < 1; j++) {
-                if (stakers[i].stakeAllocated[j] > 0) {
-                    // TODO: change the following call to strategy after array format is adopted
-                    contracts
-                        .eigenlayer
-                        .dummyTokenStrat
-                        .underlyingToken()
-                        .approve(
-                            address(contracts.eigenlayer.strategyManager),
-                            stakers[i].stakeAllocated[j]
-                        );
 
-                    /* 
-                        Staker i deposits `stakeAllocated` amount of `token` into the specified 
-                        `strategy`
-                    */
-                    contracts.eigenlayer.strategyManager.depositIntoStrategy(
-                        contracts.eigenlayer.dummyTokenStrat,
-                        contracts.eigenlayer.dummyTokenStrat.underlyingToken(),
-                        stakers[i].stakeAllocated[j]
-                    );
-                }
-            }
-            vm.stopBroadcast();
-        }
-    }
 
     function delegateToOperators(
         Staker[] memory stakers,
@@ -358,79 +469,6 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         }
     }
 
-    function queueWithdrawalFromEigenLayer(
-        Contracts memory contracts,
-        Staker[] memory stakersToBeWithdrawn
-    ) public {
-        
-        QueuedWithdrawalOutput[] memory queuedWithdrawalOutputArr = new QueuedWithdrawalOutput[](stakersToBeWithdrawn.length);
-        
-        for (uint i = 0; i < stakersToBeWithdrawn.length; i++) {
-
-            /* storing the necessary data for completing queued withdrawal */
-            queuedWithdrawalOutputArr[i].stakerAddr =  stakersToBeWithdrawn[i].addr;
-            queuedWithdrawalOutputArr[i].stakerPrivateKey = stakersToBeWithdrawn[i].privateKey;
-            
-            
-            vm.startBroadcast(stakersToBeWithdrawn[i].privateKey);
-            
-            queuedWithdrawalOutputArr[i].nonce = uint96(
-                                        StrategyManager(address(contracts.eigenlayer.strategyManager))
-                                            .numWithdrawalsQueued(stakersToBeWithdrawn[i].addr)
-                                        );
-
-            queuedWithdrawalOutputArr[i].operatorAddr = contracts
-                                                        .eigenlayer.
-                                                        delegationManager.
-                                                        delegatedTo(stakersToBeWithdrawn[i].addr); 
-             
-
-            (IStrategy[] memory strategies, uint256[] memory shares) = contracts
-                .eigenlayer
-                .strategyManager
-                .getDeposits(stakersToBeWithdrawn[i].addr);
-            
-            address[] memory strategyAddresses = new address[](strategies.length);
-            for (uint j = 0; j < strategies.length; j++) {
-                strategyAddresses[j] = address(strategies[j]);
-            }
-            
-            queuedWithdrawalOutputArr[i].addressOfStrategiesToBeWithdrawnFrom = strategyAddresses;
-            queuedWithdrawalOutputArr[i].sharesToBeWithdrawn = shares;
-                                 
-            
-
-            /* queue withdrawal from EigenLayer */
-            // currently withdrawal means every share is withdrawn from every strategy
-            // TODO : make it flexible and have shares + strategy passed by the user
-            uint256[] memory strategyIndexes = new uint256[](strategyAddresses.length);
-            for (uint j = 0; j < strategyAddresses.length; j++) {
-                strategyIndexes[j] = j;
-            }
-            bytes32 withdrawalRoot;
-
-
-
-            withdrawalRoot = contracts
-                .eigenlayer
-                .strategyManager
-                .queueWithdrawal(
-                    strategyIndexes,
-                    strategies,
-                    shares,
-                    // set the withdrawer to be staker itself
-                    stakersToBeWithdrawn[i].addr,
-                    true
-                );
-
-            vm.stopBroadcast();
-            // TODO (Soubhik): this is just hacky way, find a proper resolutions
-            queuedWithdrawalOutputArr[i].withdrawalStartBlock = uint32(block.number) + uint32(i) + 1;
-            
-        }
-        parseAndUpdateQueuedWithdrawalsDetails(queuedWithdrawalOutputArr);
-
-    }
 
 
     // STATUS PRINTER FUNCTIONS
@@ -439,6 +477,9 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
     ) external {
         // TODO: change 1 to length of the dummyTokenStrat field in EigenLayer struct after array format is adopted
         Staker[] memory stakers = parseStakersFromConfigFile(avsConfigFile, 1);
+
+    
+
 
         for (uint256 i = 0; i < stakers.length; i++) {
             emit log_named_uint("PRINTING STATUS OF STAKER", i);
@@ -495,9 +536,35 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
             .delegationManager
             .delegatedTo(stakerAddr);
         emit log_named_address(
-            "staker has delegated to the operator:",
+            "staker has delegated to the operator",
             operatorDelegatedTo
         );
+
+
+
+        /* allocation of token to stakers */
+        // NOTE: assumption is that there is only 1 strategy address and so only 1 underlying token
+        address[] memory tokenAddress = new address[](1);
+        tokenAddress[0] = address(StrategyBase(contracts.eigenlayer.dummyTokenStrat).underlyingToken());
+        string memory tokenBalancePairs;
+        for (uint j = 0; j < tokenAddress.length; j++) {
+            tokenBalancePairs = string.concat(tokenBalancePairs, "(", vm.toString(tokenAddress[j]), "," , vm.toString(ERC20(tokenAddress[j]).balanceOf(stakerAddr)), ")");
+        }
+        emit log_named_string("Balance of stakers in token", tokenBalancePairs);
+
+
+        (IStrategy[] memory strategies, uint256[] memory shares) = contracts
+                .eigenlayer
+                .strategyManager
+                .getDeposits(stakerAddr);
+        string memory strategySharePairs;
+        for (uint j = 0; j < strategies.length; j++) {
+            strategySharePairs = string.concat(strategySharePairs, "(", vm.toString(address(strategies[j])), "," , vm.toString(shares[j]), ")");
+        }
+        emit log_named_string("Strategies and shares that the staker has deposited into:", strategySharePairs);
+
+
+
     }
 
     function printStakerStatusForWithdrawalPurpose(

@@ -1,4 +1,3 @@
-# TODO (Soubhik): delete the json files
 # deployment
 make deploy-avs
 # eigenlayer related
