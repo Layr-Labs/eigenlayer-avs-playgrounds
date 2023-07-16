@@ -1,0 +1,35 @@
+{
+  "numQueuedWithdrawals": {
+    "numQueuedWithdrawals": 2
+  },
+  "queuedWithdrawal0": {
+    "addressOfStrategiesToBeWithdrawnFrom": [
+      "0x460fB1B764D410F4f23Bb0cd25A96ba51784a9b6"
+    ],
+    "isServiceNotifiedYet": 0,
+    "middlewareTimesIndexForWithdrawal": 0,
+    "nonce": 4,
+    "operatorAddr": "0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f",
+    "sharesToBeWithdrawn": [
+      6300
+    ],
+    "stakerAddr": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+    "stakerPrivateKey": 40606737760334725431406512677033654118342507952694270066784247067953537247501,
+    "withdrawalStartBlock": 9353043
+  },
+  "queuedWithdrawal1": {
+    "addressOfStrategiesToBeWithdrawnFrom": [
+      "0x460fB1B764D410F4f23Bb0cd25A96ba51784a9b6"
+    ],
+    "isServiceNotifiedYet": 0,
+    "middlewareTimesIndexForWithdrawal": 0,
+    "nonce": 4,
+    "operatorAddr": "0xa0Ee7A142d267C1f36714E4a8F75612F20a79720",
+    "sharesToBeWithdrawn": [
+      12600
+    ],
+    "stakerAddr": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+    "stakerPrivateKey": 42468054105998644681036035997014131563610289007175279352442773583210734106202,
+    "withdrawalStartBlock": 9353044
+  }
+}

@@ -74,6 +74,9 @@ contract PlaygroundAVSConfigParser is Script, Test, Utils {
         IBLSRegistryCoordinatorWithIndices registryCoordinator;
     }
 
+    /*
+       This function is used for parsing information aboout all stakers. 
+     */
     function parseStakersFromConfigFile(
         string memory input,
         uint numstrategies
@@ -111,6 +114,10 @@ contract PlaygroundAVSConfigParser is Script, Test, Utils {
         return stakers;
     }
 
+
+    /*
+       This function is used for parsing information about the type of withdrawal requests that needs to be made. 
+     */    
     function parseWithdrawalRequestFile(
         Staker[] memory stakers
     ) public returns (Staker[] memory) {
@@ -128,10 +135,7 @@ contract PlaygroundAVSConfigParser is Script, Test, Utils {
                                             ".indicesOfStakersToBeWithdrawn"
                                         );
 
-        if (numOfStakersToBeWithdrawn != indicesOfStakersWithdrawing.length) {
-            // TODO (Soubhik): error message is not getting logged.
-            vm.expectRevert("Withdrawal_request.json error: Please esnure numOfStakersToBeWithdrawn is same as the length of indicesOfStakersToBeWithdrawn");
-        }
+        require(numOfStakersToBeWithdrawn == indicesOfStakersWithdrawing.length, "Withdrawal_request.json error: Please ensure numOfStakersToBeWithdrawn is same as the length of indicesOfStakersToBeWithdrawn"); 
         
         // getting actual details on the stakers who have put in withdrawal requests
         Staker[] memory stakersWithdrawing = new Staker[](indicesOfStakersWithdrawing.length);
