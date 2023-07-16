@@ -1,0 +1,34 @@
+{
+    "version": "1.0",
+    "chainId": "5",
+    "createdAt": 1689470455339,
+    "meta": {
+        "name": "whitelist-strategy",
+        "description": "",
+        "txBuilderVersion": "1.16.0",
+        "createdFromSafeAddress": "0x95C7A3F90e80329C97A6493142Ab7923E15b8083",
+        "createdFromOwnerAddress": "",
+        "checksum": "0xfd0fc2882b78222bb58100ce0bd19b22c58eabf04b2bd5ad4e3d2ae783d455f2"
+    },
+    "transactions": [
+        {
+            "to": "0x3D2b8adb7970D6201025638B7Db41ad7f85373c2",
+            "value": "0",
+            "data": null,
+            "contractMethod": {
+                "inputs": [
+                    {
+                        "internalType": "contract IStrategy[]",
+                        "name": "strategiesToWhitelist",
+                        "type": "address[]"
+                    }
+                ],
+                "name": "addStrategiesToDepositWhitelist",
+                "payable": false
+            },
+            "contractInputsValues": {
+                "strategiesToWhitelist": "[0x7ab48F7e6e81D18C01bb00e34E6F33E250a13AF2]"
+            }
+        }
+    ]
+}

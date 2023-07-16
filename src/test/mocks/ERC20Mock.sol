@@ -57,6 +57,10 @@ contract ERC20Mock is Context, IERC20 {
         return _balances[account];
     }
 
+    function mint(address account, uint256 amount) public {
+        _mint(account, amount);
+    }
+
     /**
      * @dev See {IERC20-transfer}.
      *
