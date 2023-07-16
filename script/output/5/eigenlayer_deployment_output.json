@@ -1,8 +1,8 @@
 {
   "addresses": {
-    "ERC20Mock": "0x349d899Ab6338e082be163cEBC8e391104bC767F",
-    "baseStrategy": "0x460fB1B764D410F4f23Bb0cd25A96ba51784a9b6",
-    "baseStrategyImplementation": "0x213454a1A3e6e408A88Cad585A6327f36E39a223",
+    "ERC20Mock": "0x7ab48F7e6e81D18C01bb00e34E6F33E250a13AF2",
+    "baseStrategy": "0xcD2429dacaE666551C3E3511155D81F3E3970583",
+    "baseStrategyImplementation": "0x6D41046d2c91c9911cF89e124BEdFd2Ce007afD8",
     "delayedWithdrawalRouter": "0xDfFCB9E60Ca8A715d80baf4aB9E410a89C939dC2",
     "delayedWithdrawalRouterImplementation": "0x6a72bb69B3f46E3954B6570b9bD723653aAdacD9",
     "delegation": "0x7A76C4E691b18B66c05574c4f6A46462F5EEd4CB",

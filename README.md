@@ -36,7 +36,7 @@ This deploys the playgroundAVS service manager contract (which you will need to 
 
 At any point run `make` to get info on the different possible commands.
 
-<img src="./images/makefile.png" style="width: 50%"/>
+<img src="./images/makefile.png" style="width: 100%"/>
 
 ## Operator and staker interactions
 Now feel free to play with any of the other make commands, learn from the errors, ask us questions, etc.
@@ -49,6 +49,8 @@ At any point, to know the status of your operators and stakers, run the STATUS_P
 make print-operators-status
 make print-stakers-status
 ```
+
+For a lot more detail and explanation of each command in detail, look at the [runbook](./docs/runbook.md).
 
 
 ## Playbooks

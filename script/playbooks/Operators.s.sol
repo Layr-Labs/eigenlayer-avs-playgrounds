@@ -97,9 +97,6 @@ contract Operators is Script, PlaygroundAVSConfigParser {
     ) internal {
         for (uint256 i = 0; i < operators.length; i++) {
             vm.startBroadcast(operators[i].ECDSAPrivateKey);
-            // TODO(samlaf): create a github issue to eventually fix this typecasting ugliness
-            //               what's even the point of having interfaces if we don't use them?
-            // also probably want to make this registration function a separate thing that we can call early on
             BLSPubkeyRegistry(
                 address(
                     BLSRegistryCoordinatorWithIndices(
