@@ -59,7 +59,6 @@ staker-delegate-to-operators: ## Allocate tokens to stakers and do delegations o
 	forge script script/playbooks/Stakers.s.sol --sig "delegateToOperators(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input 
 
 staker-queue-withdrawal: ## Queue withdrawals from the staker in EigenLayer
-# TODO: queueWithdrawalFromEigenLayer-latest has been copied from the broadcast folder but this is just a hacky way
 	forge script script/playbooks/Stakers.s.sol --sig "queueWithdrawalFromEigenLayer(string memory avsConfigFile)" --rpc-url ${RPC_URL} -vvvv --broadcast playground_avs_input
 
 
@@ -70,7 +69,6 @@ advanceChainBy100Blocks: ## Advance chain to permit completing the withdrawal
 	forge script script/utils/Utils.sol --sig "advanceChainByNBlocks(uint256 n)" --rpc-url ${RPC_URL} --private-key ${PRIVATE_KEY} --broadcast 100
 
 staker-complete-queued-withdrawal: ## Complete queued withdrawals from the staker in EigenLayer
-# TODO: queueWithdrawalFromEigenLayer-latest has been copied from the broadcast folder but this is just a hacky way
 	forge script script/playbooks/Stakers.s.sol --sig "completeQueuedWithdrawalFromEigenLayer()" --rpc-url ${RPC_URL} -vvvv --broadcast
 
 

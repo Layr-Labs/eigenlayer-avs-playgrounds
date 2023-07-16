@@ -1,7 +1,10 @@
+#!/bin/bash
+
 # deployment
 make deploy-avs
 
 # delete the json file for queueud withdrawals
+echo -n "" >script/output/5/modified_queue_withdrawal_output.json
 
 # eigenlayer related
 make register-operators-with-eigenlayer
