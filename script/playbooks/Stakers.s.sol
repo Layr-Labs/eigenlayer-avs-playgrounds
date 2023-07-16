@@ -174,7 +174,8 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
 
 
     /*
-        NOTE: Function for enabling stakers to queue their withdrawal request with EigenLayer
+        NOTE: Function for enabling stakers to queue their withdrawal request with EigenLayer.
+        Current assumption is that withdrawal would imply every share is withdrawn from every strategy.
      */
     function queueWithdrawalFromEigenLayer(
         string memory avsConfigFile
@@ -218,12 +219,14 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
                                             .numWithdrawalsQueued(stakersToBeWithdrawn[i].addr)
                                         );
 
+            // determining the address of the operator to whom the staker is delegated to.
             queuedWithdrawalOutputArr[i].operatorAddr = contracts
                                                         .eigenlayer.
                                                         delegationManager.
                                                         delegatedTo(stakersToBeWithdrawn[i].addr); 
              
 
+            // getting information on all strategies and shares where the staker is currently deposited into.
             (IStrategy[] memory strategies, uint256[] memory shares) = contracts
                 .eigenlayer
                 .strategyManager
@@ -249,7 +252,7 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
             bytes32 withdrawalRoot;
 
 
-
+            // making the call to queue withdrawal requests
             withdrawalRoot = contracts
                 .eigenlayer
                 .strategyManager
@@ -263,16 +266,27 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
                 );
 
             vm.stopBroadcast();
-            // TODO (Soubhik): this is just hacky way, find a proper resolutions
+
+            /* 
+                This is a hacky way of ensuring the withdrawal block is recording in a manner such that completion 
+                of queued withdrawal happens successfully.
+             */ 
             queuedWithdrawalOutputArr[i].withdrawalStartBlock = uint32(block.number) + uint32(i) + 1;
             
         }
+
+        // Store the queued withdrawal requests in a json file.
         parseAndUpdateQueuedWithdrawalsDetails(queuedWithdrawalOutputArr);
     }
 
 
 
-    // calling this function would update the record against all operators 
+    /* 
+        NOTE: This function would update the record of active queued withdrawal requests with additional information 
+        acquired from staker notifying the AVS that the staker intends to withdraw from EigenLayer.
+
+        Assumption is that there is only one AVS to whom all the operators have opted-into.
+     */
     function notifyServiceAboutWithdrawal() external {
         Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
             "eigenlayer_deployment_output",
@@ -300,7 +314,6 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
             for (uint j = 0; j <= counter; j++) {
                 if (sanitizedAddressesOfOperatorsForStakersWithdrawing[j] == addressesOfOperatorsForStakersWithdrawing[i]) {
                     anyMatch = true;
-                    // TODO: use break?
                 }
             }
 
@@ -343,6 +356,7 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         }
 
         // call AVS's StakeRegistry for notifying the intention to withdraw
+        // TODO: remove the magic number in later versions.
         vm.startBroadcast(0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d);
         contracts
             .playgroundAVS
@@ -371,7 +385,9 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
     }
 
 
-
+    /* 
+        NOTE: This function would complete the request for all currently active queued withdrawals.
+     */
     function completeQueuedWithdrawalFromEigenLayer() external {
         Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
             "eigenlayer_deployment_output",
@@ -384,9 +400,8 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         bool receiveAsTokens = true;
 
         for (uint i = 0; i < queuedWithdrawalsArr.length; i++) {
-            /* prepare the inputs for calling completeQueuedWithdrawals() */
-        
-            // prepare the input "queuedWithdrawals"
+            /* We start with preparing the inputs for calling completeQueuedWithdrawals() */
+            // 1. prepare the input "queuedWithdrawals"
             IStrategyManager.QueuedWithdrawal memory completequeuedWithdrwalInput;
             
             IStrategy[] memory strategiesToBeWithdrawnFrom = new IStrategy[](queuedWithdrawalsArr[i].addressOfStrategiesToBeWithdrawnFrom.length);
@@ -409,12 +424,12 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
                         ));
 
 
-            // prepare the input "middlewareTimesIndexes"
+            // 2. prepare the input "middlewareTimesIndexes"
             uint256 middlewareTimesIndex; 
             middlewareTimesIndex = queuedWithdrawalsArr[i].middlewareTimesIndexForWithdrawal;
             
 
-            // prepare the input "tokens"
+            // 3. prepare the input "tokens"
             IERC20[] memory tokens = new IERC20[](completequeuedWithdrwalInput.strategies.length);
             for (uint j = 0; j < completequeuedWithdrwalInput.strategies.length; j++) {
                 tokens[j] = completequeuedWithdrwalInput.strategies[j].underlyingToken();
@@ -433,6 +448,7 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
 
         }
 
+        // update the json file as all active withdrawal requests have been completed.
         vm.writeFile("script/output/5/modified_queue_withdrawal_output.json", "");
 
     }
