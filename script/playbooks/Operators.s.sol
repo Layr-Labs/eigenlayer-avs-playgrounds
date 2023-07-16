@@ -276,25 +276,27 @@ contract Operators is Script, PlaygroundAVSConfigParser {
             "   middlewareTimesLen (# of stake updates)",
             middlewareTimesLen
         );
-        uint32 stalestUpdateBlock = contracts
-            .eigenlayer
-            .slasher
-            .getMiddlewareTimesIndexBlock(operatorAddr, middlewareTimesLen - 1);
-        emit log_named_uint(
-            "   stalestUpdateBlock",
-            stalestUpdateBlock
-        );
-        uint32 latestServeUntilBlock = contracts
-            .eigenlayer
-            .slasher
-            .getMiddlewareTimesIndexServeUntilBlock(
-                operatorAddr,
-                middlewareTimesLen - 1
+        if (middlewareTimesLen > 0) {
+            uint32 stalestUpdateBlock = contracts
+                .eigenlayer
+                .slasher
+                .getMiddlewareTimesIndexBlock(
+                    operatorAddr,
+                    middlewareTimesLen - 1
+                );
+            emit log_named_uint("   stalestUpdateBlock", stalestUpdateBlock);
+            uint32 latestServeUntilBlock = contracts
+                .eigenlayer
+                .slasher
+                .getMiddlewareTimesIndexServeUntilBlock(
+                    operatorAddr,
+                    middlewareTimesLen - 1
+                );
+            emit log_named_uint(
+                "   latestServeUntilBlock",
+                latestServeUntilBlock
             );
-        emit log_named_uint(
-            "   latestServeUntilBlock",
-            latestServeUntilBlock
-        );
+        }
         bool isFrozen = contracts.eigenlayer.slasher.isFrozen(operatorAddr);
         emit log_named_string(
             "operator is frozen",
