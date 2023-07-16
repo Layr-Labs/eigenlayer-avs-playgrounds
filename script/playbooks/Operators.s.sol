@@ -262,12 +262,38 @@ contract Operators is Script, PlaygroundAVSConfigParser {
             convertOperatorStatusToString(operatorFromRegistry.status)
         );
         emit log_named_bytes32(
-            "   operatorId in AVS registry",
+            "   operatorId",
             operatorFromRegistry.operatorId
         );
         emit log_named_uint(
-            "   operator fromTaskNumber in AVS registry",
+            "   operator fromTaskNumber",
             operatorFromRegistry.fromTaskNumber
+        );
+        uint32 middlewareTimesLen = uint32(
+            contracts.eigenlayer.slasher.middlewareTimesLength(operatorAddr)
+        );
+        emit log_named_uint(
+            "   middlewareTimesLen (# of stake updates)",
+            middlewareTimesLen
+        );
+        uint32 stalestUpdateBlock = contracts
+            .eigenlayer
+            .slasher
+            .getMiddlewareTimesIndexBlock(operatorAddr, middlewareTimesLen - 1);
+        emit log_named_uint(
+            "   stalestUpdateBlock",
+            stalestUpdateBlock
+        );
+        uint32 latestServeUntilBlock = contracts
+            .eigenlayer
+            .slasher
+            .getMiddlewareTimesIndexServeUntilBlock(
+                operatorAddr,
+                middlewareTimesLen - 1
+            );
+        emit log_named_uint(
+            "   latestServeUntilBlock",
+            latestServeUntilBlock
         );
         bool isFrozen = contracts.eigenlayer.slasher.isFrozen(operatorAddr);
         emit log_named_string(
