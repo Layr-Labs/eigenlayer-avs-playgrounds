@@ -12,9 +12,11 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract Stakers is Script, PlaygroundAVSConfigParser {
-    Vm cheats = Vm(HEVM_ADDRESS);
 
-
+    /*
+        NOTE: This function is used to delegate to operators. 
+        We are making an assumption that there is only one strategy.
+     */
     function delegateToOperators(string memory avsConfigFile) external {
         Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
             "eigenlayer_deployment_output",
@@ -23,8 +25,8 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
 
         /* parsing avsConfigFile for stakers */
         Staker[] memory stakers;
+
         // we are setting number of strategies to 1
-        // TODO: change 1 to length of the dummyTokenStrat field in EigenLayer struct after array format is adopted
         stakers = parseStakersFromConfigFile(avsConfigFile, 1);
 
         // parsing avsConfigFile for operators
@@ -33,9 +35,32 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         );
 
         // stakers delegating to the operators
-        delegateToOperators(stakers, operators, contracts);
+        for (uint256 i = 0; i < stakers.length; i++) {
+            vm.startBroadcast(stakers[i].privateKey);
+            
+            if (
+                contracts.eigenlayer.delegationManager.isDelegated(
+                    stakers[i].addr
+                )
+            ) {
+                // don't try to delegate if already delegated, otherwise it'll throw an error
+                continue;
+            }
+
+            // staker i is calling delegation manager to delegate its assets to some operator i
+            contracts.eigenlayer.delegationManager.delegateTo(
+                operators[i].ECDSAAddress
+            );
+
+            vm.stopBroadcast();
+        }
     }
 
+
+    /*
+        NOTE: Function for stakers to be able to mint tokens for themselves.
+        We are making an assumption that there is only one strategy.
+     */
     function mintTokensToStakers(
         string memory avsConfigFile
     ) external {
@@ -44,20 +69,19 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
             "playground_avs_deployment_output"
         );
 
-        /* parsing avsConfigFile for stakers */
+        // Parsing avsConfigFile for stakers.
         Staker[] memory stakers;
         // we are setting number of strategies to 1
-        // TODO: change 1 to length of the dummyTokenStrat field in EigenLayer struct after array format is adopted
         stakers = parseStakersFromConfigFile(avsConfigFile, 1);
 
-        /* allocation of token to stakers */
-        // TODO: change 1 to length of the dummyTokenStrat field in EigenLayer struct after array format is adopted
+
+        // Allocation of token to stakers
+        // we are setting number of strategies to 1
         address[] memory strategyAddresses = new address[](1);
         strategyAddresses[0] = address(contracts.eigenlayer.dummyTokenStrat);
-        // allocateTokenToStakers(stakers, strategyAddresses);
+        
 
-
-        /* collect all the staker addresses in one array */
+        // Collect all the staker addresses in one array
         address[] memory stakerAddresses = new address[](stakers.length);
         for (uint i = 0; i < stakers.length; i++) {
             stakerAddresses[i] = stakers[i].addr;
@@ -76,7 +100,7 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
                 tokenAllocatedToStakers[j] = stakers[j].stakeAllocated[i];
             }
 
-            // TODO: access Anvil private key instead of hardcoding it
+            // TODO: Magic number here. Access Anvil private key instead of hardcoding it
             vm.startBroadcast(
                 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
             );
@@ -91,6 +115,9 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
     }
 
 
+    /*
+        NOTE: Function for  stakers to be able to deposit tokens into strategies.
+     */
     function depositIntoStrategies(
         string memory avsConfigFile
     ) external {
@@ -124,13 +151,12 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
                         address(contracts.eigenlayer.strategyManager),
                         tokenAmt
                     );
-                emit log_uint(tokenAmt);
 
                 /* 
                     Staker i deposits `stakeAllocated` amount of `token` into the specified 
                     `strategy`
                 */
-                uint256 shares = contracts
+                contracts
                     .eigenlayer
                     .strategyManager
                     .depositIntoStrategy(
@@ -139,7 +165,6 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
                         tokenAmt
                     );
 
-                emit log_uint(shares);
 
             }
             vm.stopBroadcast();
@@ -147,6 +172,10 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
     }
 
 
+
+    /*
+        NOTE: Function for enabling stakers to queue their withdrawal request with EigenLayer
+     */
     function queueWithdrawalFromEigenLayer(
         string memory avsConfigFile
     ) external {
@@ -158,14 +187,14 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         /* parsing avsConfigFile for info on stakers that are currently restaked in EigenLayer */
         Staker[] memory stakersCurrentlyRestakedOnEigenLayer;
         
-        // we are setting number of strategies to 1
-        // TODO: change 1 to length of the dummyTokenStrat field in EigenLayer struct after array format is adopted
+        // we are assuming there is only one strategy
         stakersCurrentlyRestakedOnEigenLayer = parseStakersFromConfigFile(
             avsConfigFile,
             1
         );
 
-        /* parsing avsConfigFile for stakers that are to be withdrawn */
+
+        // parsing avsConfigFile for stakers that are to be withdrawn
         Staker[] memory stakersToBeWithdrawn;
         /* getting information on which stakers have to be withdrawn from the json file */
         stakersToBeWithdrawn = parseWithdrawalRequestFile(
@@ -408,66 +437,7 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
 
     }
 
-    // function allocateTokenToStakers(
-    //     Staker[] memory stakers,
-    //     address[] memory strategyAddresses
-    // ) public {
-    //     /* collect all the staker addresses in one array */
-    //     address[] memory stakerAddresses = new address[](stakers.length);
-    //     for (uint i = 0; i < stakers.length; i++) {
-    //         stakerAddresses[i] = stakers[i].addr;
-    //     }
-
-    //     // For each strategy, allocate the corresponding tokens associated to stakers
-    //     for (uint i = 0; i < strategyAddresses.length; i++) {
-    //         /* 
-    //             collect the amount of tokens allocated to each staker for the token 
-    //             corresponding to strategy i 
-    //         */
-    //         uint256[] memory tokenAllocatedToStakers = new uint256[](
-    //             stakers.length
-    //         );
-    //         for (uint j = 0; j < stakers.length; j++) {
-    //             tokenAllocatedToStakers[j] = stakers[j].stakeAllocated[i];
-    //         }
-
-    //         // TODO: access Anvil private key instead of hardcoding it
-    //         vm.startBroadcast(
-    //             0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-    //         );
-    //         _allocate(
-    //             strategyAddresses[i],
-    //             stakerAddresses,
-    //             tokenAllocatedToStakers
-    //         );
-    //         vm.stopBroadcast();
-    //     }
-    // }
-
-
-
-    function delegateToOperators(
-        Staker[] memory stakers,
-        Operator[] memory operators,
-        Contracts memory contracts
-    ) public {
-        for (uint256 i = 0; i < stakers.length; i++) {
-            if (
-                contracts.eigenlayer.delegationManager.isDelegated(
-                    stakers[i].addr
-                )
-            ) {
-                // don't try to delegate if already delegated, otherwise it'll throw an error
-                continue;
-            }
-            vm.startBroadcast(stakers[i].privateKey);
-            // staker i is calling delegation manager to delegate its assets to some operator i
-            contracts.eigenlayer.delegationManager.delegateTo(
-                operators[i].ECDSAAddress
-            );
-            vm.stopBroadcast();
-        }
-    }
+    
 
 
 
@@ -488,30 +458,6 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         }
     }
 
-    function printStatusOfStakerForWithdrawals(
-        string memory queuedWithdrawalOutputFile
-    ) external {
-        (
-            uint32 withdrawalStartBlock,
-            address[] memory arrDelegatedOperatorAddrForQueuedWithdrawals,
-            bytes32[] memory withdrawalRoot
-        ) = parseBlockNumberAndOperatorDetailsFromQueuedWithdrawal(
-                queuedWithdrawalOutputFile
-            );
-
-        for (
-            uint256 i = 0;
-            i < arrDelegatedOperatorAddrForQueuedWithdrawals.length;
-            i++
-        ) {
-            emit log_named_uint("PRINTING STATUS OF STAKER'S WITHDRAWAL", i);
-            printStakerStatusForWithdrawalPurpose(
-                arrDelegatedOperatorAddrForQueuedWithdrawals[i],
-                withdrawalRoot[i]
-            );
-            emit log("--------------------------------------------------");
-        }
-    }
 
     function printStakerStatus(address stakerAddr) public {
         Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
@@ -553,6 +499,7 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         emit log_named_string("Balance of stakers in token", tokenBalancePairs);
 
 
+
         (IStrategy[] memory strategies, uint256[] memory shares) = contracts
                 .eigenlayer
                 .strategyManager
@@ -563,58 +510,6 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         }
         emit log_named_string("Strategies and shares that the staker has deposited into:", strategySharePairs);
 
-
-
     }
 
-    function printStakerStatusForWithdrawalPurpose(
-        address operatorAddr,
-        bytes32 withdrawalRoot
-    ) public {
-        Contracts memory contracts = parseContractsFromDeploymentOutputFiles(
-            "eigenlayer_deployment_output",
-            "playground_avs_deployment_output"
-        );
-
-        emit log_named_bytes32("withdrawalRoot", withdrawalRoot);
-        bool withdrawalPending = StrategyManager(
-            address(contracts.eigenlayer.strategyManager)
-        ).withdrawalRootPending(withdrawalRoot);
-        emit log_named_string(
-            "withdrawal is pending",
-            convertBoolToString(withdrawalPending)
-        );
-
-        emit log_named_address("operator is:", operatorAddr);
-
-        uint256 middlewareTimesLength = contracts
-            .eigenlayer
-            .slasher
-            .middlewareTimesLength(operatorAddr);
-        emit log_named_uint("middlewareTimesLength is:", middlewareTimesLength);
-
-        uint32 middlewareTimesIndexStalestUpdateBlock = contracts
-            .eigenlayer
-            .slasher
-            .getMiddlewareTimesIndexBlock(
-                operatorAddr,
-                uint32(middlewareTimesLength - 1)
-            );
-        emit log_named_uint(
-            "PRINTING MIDDLEWARETIMESINDEXSTALESTUPDATEBLOCK FOR STAKER'S DELEGATED OPERATOR",
-            middlewareTimesIndexStalestUpdateBlock
-        );
-
-        uint32 middlewareTimesIndexServeUntilBlock = contracts
-            .eigenlayer
-            .slasher
-            .getMiddlewareTimesIndexServeUntilBlock(
-                operatorAddr,
-                uint32(middlewareTimesLength - 1)
-            );
-        emit log_named_uint(
-            "PRINTING MIDDLEWARETIMESINDEXSERVEUNTILBLOCK IN RELATION TO STAKER",
-            middlewareTimesIndexServeUntilBlock
-        );
-    }
 }

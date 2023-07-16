@@ -221,7 +221,6 @@ contract PlaygroundAVSConfigParser is Script, Test, Utils {
                                 );
             }
         }
-
         return oldQueuedWithdrawalOutputArr;
 
     }
@@ -443,7 +442,6 @@ contract PlaygroundAVSConfigParser is Script, Test, Utils {
 
         }
 
-
         vm.serializeString(
             parentObject,
             numQueuedWithdrawalsTag,
@@ -468,13 +466,13 @@ contract PlaygroundAVSConfigParser is Script, Test, Utils {
 
         }
 
-        writeOutput(finalJson, "modified_queue_withdrawal_output");
-        
-
+        writeOutput(finalJson, "modified_queue_withdrawal_output");    
     }
 
-    /* TODO: Currently this can support only one AVS and withdrawals where stakers withdraws completely from all strategies.
-             Next version, modify the following function to support this.
+    /* 
+        NOTE: Currently this can support only one AVS and withdrawals where stakers 
+        withdraws completely from all strategies. Next version, modify the following 
+        function to support this.
     */
     function recordServiceNotification (
         address[] memory addrOfStakersWithdrawing,
@@ -516,53 +514,6 @@ contract PlaygroundAVSConfigParser is Script, Test, Utils {
 
     }
  
-
-
-
-
-
-    function parseBlockNumberAndOperatorDetailsFromQueuedWithdrawal(
-        string memory queuedWithdrawalOutputFile
-    ) public returns (uint32, address[] memory, bytes32[] memory) {
-        string memory queuedWithdrawalOutput = vm.readFile("broadcast/Stakers.s.sol/5/queueWithdrawalFromEigenLayer-latest.json");
-        uint32 blockNumber = uint32(stdJson.readUint(
-            queuedWithdrawalOutput,
-            ".receipts[0].blockNumber"
-        ));
-
-        bytes memory eventData =  stdJson.readBytes(
-            queuedWithdrawalOutput,
-            // TODO: is the correct log always going to be the second one?
-            ".receipts[0].logs[1].data"
-        );      
-
-        address depositor;
-        uint96 nonce;
-        address withdrawer;
-        address delegatedOperatorAddress;
-        bytes32 withdrawalRoot;
-        (depositor, nonce, withdrawer, delegatedOperatorAddress, withdrawalRoot)  = abi.decode(
-            eventData,
-            (address, uint96, address, address, bytes32)
-        );
-        // emit log_named_address("depositor", depositor);
-        // emit log_named_uint("nonce", nonce);
-        // emit log_named_address("withdrawer", withdrawer);
-        // emit log_named_address("delegatedAddress", delegatedOperatorAddress);
-        // emit log_named_bytes32("withdrawalRoot", withdrawalRoot);
-
-        // TODO: Right now we are assuming there is only one queued withdrawal at any time.
-        // Need to make this more general for more than one queued withdrawals existing at the same time
-        address[] memory arrDelegatedOperatorAddrForQueuedWithdrawals = new address[](1);
-        arrDelegatedOperatorAddrForQueuedWithdrawals[0] = delegatedOperatorAddress;
-
-        // TODO: Right now we are assuming there is only one queued withdrawal at any time.
-        // Need to make this more general for more than one queued withdrawals existing at the same time
-        bytes32[] memory withdrawalRootArr = new bytes32[](1);
-        withdrawalRootArr[0] = withdrawalRoot;
-
-        return (blockNumber, arrDelegatedOperatorAddrForQueuedWithdrawals, withdrawalRootArr);
-    }
 
 
     function parseContractsFromDeploymentOutputFiles(

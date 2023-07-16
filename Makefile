@@ -89,6 +89,3 @@ print-operators-status: ## Print status of all operators from config file playgr
 print-stakers-status: ## Print status of all stakers from config file playground_avs_input.json
 	forge script script/playbooks/Stakers.s.sol --sig "printStatusOfStakersFromConfigFile(string memory avsConfigFile)" --rpc-url ${RPC_URL} playground_avs_input
 
-
-print-staker-withdrawal-status: ## Print status of all withdrawals of stakers
-	forge script script/playbooks/Stakers.s.sol --sig "printStatusOfStakerForWithdrawals(string memory avsConfigFile)" --rpc-url ${RPC_URL} queueWithdrawalFromEigenLayer-latest
