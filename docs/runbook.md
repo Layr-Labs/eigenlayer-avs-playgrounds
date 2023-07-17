@@ -103,15 +103,30 @@ This will register the operator's BN254 public keys with the [BLSPublicKeyCompen
 
 #### 2. opt-operators-into-slashing-by-avs
 
-This command calls 
+After running this command, you should be able to run [print-operators-status](#print-operators-status) and see the operator's status as opted-in to slashing:
+
+```
+operator is opted in to playgroundAVS (aka can be slashed): true
+```
 
 #### 3. register-operators-with-avs
 
+TODO(samlaf): add details about registries contracts (should we just link to Gautham's google docs?)
+
+After running this command, you should be able to run [print-operators-status](#print-operators-status) and see the operator's status as REGISTERED into the AVS:
+
+```
+operator status in AVS registry: REGISTERED
+    operatorId: 0x4b7b8243d970ff1c90a7c775c008baad825893ec6e806dfa5d3663dc093ed17f
+    operator fromTaskNumber: 0
+    middlewareTimesLen (# of stake updates): 1
+    stalestUpdateBlock: 9362065
+    latestServeUntilBlock: 0
+```
+
 #### 3.5 [deregister-operators-with-avs](https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/AVS-Guide.md#deregistering-from-avs)
 
-
-
-TODO(soubhik): let's discuss and add details here. Can this call ever fail with our simpler service manager?
+Because of the limitations of how we implemented this playground, only a single avs deployment is saved in [/script/output/5/playground_avs_deployment_output.json](../script/output/5/playground_avs_deployment_output.json). Therefore, running the [run-all.sh](../run-all.sh) script twice in a row will cause issues when the stakers trying to complete their withdrawal, since they need to notify ALL avs' that the operator they are delegated to is opted-in, but the first avs address gets overwritten when running `make deploy-avs` a second time. Hence, one needs to run this `deregister-operators-with-avs` command BEFORE running `make run-all` a second time.
 
 ### Staker withdrawal from EigenLayer
 This section explains how the scripts can be used for stakers to withdraw from EigenLayer. The file [withdrawal_request.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/withdrawal_request.json) specifies the withdrawal requests. The format of this file is:
@@ -171,8 +186,11 @@ operator pubkey hash in AVS pubkey compendium (0 if not registered): 0xfa513ae8a
 operator is opted in to eigenlayer: true
 operator is opted in to playgroundAVS (aka can be slashed): true
 operator status in AVS registry: REGISTERED
-    operatorId in AVS registry: 0xfa513ae8a064e0fb50959c41249533404c2a7f8090ed79f0a44c85c9c418808c
-    operator fromTaskNumber in AVS registry: 0
+    operatorId: 0xfa513ae8a064e0fb50959c41249533404c2a7f8090ed79f0a44c85c9c418808c
+    operator fromTaskNumber: 0
+    middlewareTimesLen (# of stake updates): 2
+    stalestUpdateBlock: 9361912
+    latestServeUntilBlock: 9361912
 operator is frozen: false
 ```
 An operator initially starts with 0 delegated shares and all the fields set to false. Running through all the above commands sets each of these to true, one by one, until the operator is fully registered into everything contract needed and ready to serve actual AVS tasks.
@@ -184,6 +202,8 @@ This prints, for each staker:
 ```
 PRINTING STATUS OF STAKER: 0
 staker address: 0x70997970c51812dc3a010c7d01b50e0d17dc79c8
-staker has delegated to some operator: false
-staker has delegated to the operator:: 0x0000000000000000000000000000000000000000
+staker has delegated to some operator: true
+staker has delegated to the operator: 0x23618e81e3f5cdf7f54c3d65f7fbc0abf5b21e8f
+Balance of stakers in token: (0x0F2961A3ded5806C6eEB3159Fd2f433eDf7e6FeE,0)
+Strategies and shares that the staker has deposited into: (0xaaC95d2e9724e52181fF0eFa626088E68B1b356b,200)
 ```
