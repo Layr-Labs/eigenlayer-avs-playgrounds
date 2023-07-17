@@ -524,7 +524,7 @@ contract Stakers is Script, PlaygroundAVSConfigParser {
         for (uint j = 0; j < strategies.length; j++) {
             strategySharePairs = string.concat(strategySharePairs, "(", vm.toString(address(strategies[j])), "," , vm.toString(shares[j]), ")");
         }
-        emit log_named_string("Strategies and shares that the staker has deposited into:", strategySharePairs);
+        emit log_named_string("Strategies and shares that the staker has deposited into", strategySharePairs);
 
     }
 
