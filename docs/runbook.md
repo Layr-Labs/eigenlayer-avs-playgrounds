@@ -8,6 +8,15 @@ This is meant as a programmatic follow-along guide to the [AVS Guide](https://gi
 
 All of the below commands read from [script/output/5/eigenlayer_deployment_output.json](../script/output/5/eigenlayer_deployment_output.json) and (after deploying the avs contracts) [script/output/5/playground_avs_deployment_output.json](../script/output/5/playground_avs_deployment_output.json). Note that the `5` refers to the chainid, goerli.
 
+
+
+### Assumptions of Playground
+In this version of playground, we are making the following assumptions:
+- There is an 1:1 mapping between stakers and operators. That is, each operator can have only 1 staker delegating their ERC20 token to them.
+- There is only one ERC20Mock token is whitelisted in the StrategyManager, so if you need to use another ERC20 token for your AVS (for example if you want to start testing dual or multi quorums), you will need to be added to the alphaMultisig and whitelist that token yourself, or ask us to do it for you. 
+- 
+
+
 ### Contracts Deployment
 
 #### 0. deploy-eigenlayer
@@ -32,11 +41,16 @@ After running this command, you should be able to run [print-operators-status](#
 operator is opted in to eigenlayer: true
 ```
 
-#### 2. staker-mint-tokens-and-deposit-into-strategies
+#### 2. staker-mint-tokens
+For a staker to be able to participate in EigenLayer, the staker needs to first have tokens from whitelisted ERC20 contracts. This `staker-mint-tokens` function calls the whitelisted [ERC20Mock.sol](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/src/test/mocks/ERC20Mock.sol) to mint some tokens to every staker whose private keys is mentioned in the field `stakerPrivateKeys` in [playground_avs_input.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/playground_avs_input.json). Note that currently only this ERC20Mock token is whitelisted in the StrategyManager, so if you need to use another ERC20 token for your AVS (for example if you want to start testing dual or multi quorums), you will need to be added to the alphaMultisig and whitelist that token yourself, or ask us to do it for you.
 
-This command mints some [ERC20Mock.sol](https://github.com/Layr-Labs/eigenlayer-contracts/blob/40cbfeaefbb3135bbe0bb0f1dfb8ca4cfbb6784b/src/test/mocks/ERC20Mock.sol) tokens to the caller (staker) and deposits them into the strategy manager. Note that currently only this ERC20Mock token is whitelisted in the StrategyManager, so if you need to use another erc20 token for your AVS (for example if you want to start testing dual or multi quorums), you will need to be added to the alphaMultisig and whitelist that token yourself, or ask us to do it for you.
 
-#### 3. staker-delegate-to-operators
+...
+#### 3. staker-deposit-into-strategies
+
+
+
+#### 4. staker-delegate-to-operators
 
 This last step is simply delegating all of the previously deposited assets to a chosen operator. Note that one cannot delegate some assets to some operator and other assets to some other operator. Delegation is a binary status to a single operator.
 
@@ -97,7 +111,11 @@ TODO(soubhik): let's discuss and add details here. Can this call ever fail with 
 ### [Recording Stake Updates](https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/AVS-Guide.md#recording-stake-updates)
 
 #### staker-mint-tokens
-For a staker to be able to participate in EigenLayer, the staker needs to first have tokens from whitelisted ERC20 contracts. Calling `staker-mint-tokens` function enables the staker to call the whitelisted [ERC20Mock.sol](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/src/test/mocks/ERC20Mock.sol) to mint some tokens to itself.  
+
+
+
+#### staker-deposit-into-strategies
+Calling this function will 
 
 
 #### advanceChainBy100Blocks
