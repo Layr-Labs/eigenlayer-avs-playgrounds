@@ -10,11 +10,12 @@ All of the below commands read from [script/output/5/eigenlayer_deployment_outpu
 
 
 
-### Assumptions made in Playground scripts
+### Assumptions made in Playground scripts and json inputs
 In this version of playground, we are making the following assumptions:
 - There is an 1:1 mapping between stakers and operators. That is, each operator can have only 1 staker delegating their ERC20 token to them.
 - There is only one ERC20Mock token is whitelisted in the StrategyManager, so if you need to use another ERC20 token for your AVS (for example if you want to start testing dual or multi quorums), you will need to be added to the alphaMultisig and whitelist that token yourself, or ask us to do it for you. 
 - Once the playground has started, the assumption is that if you want to restake any new staker, you can only append its private key to the field `stakerPrivateKeys` in [playground_avs_input.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/playground_avs_input.json). Even if a staker has withdrawn from EigenLayer, you shouldn't remove its private key from the array in the field `stakerPrivateKeys`. The indices of stakers that you have to specify in the field `indicesOfStakersToBeWithdrawn` in [withdrawal_request.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/withdrawal_request.json) for withdrawing from EigenLayer depends upon the placement of the staker's private key in the field `stakerPrivateKeys` in [playground_avs_input.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/playground_avs_input.json).
+- Whenever `queueWithdrawalFromEigenLayer` is called, the staker withdraws every shares from every strategy.
 
 
 ### Contracts Deployment
@@ -130,13 +131,15 @@ in `playground_avs_input.json` file which you want to withdraw from EigenLayer. 
   "Withdrawal_request.json error: Please ensure numOfStakersToBeWithdrawn is same as the length of indicesOfStakersToBeWithdrawn"
 ```
 
-All the following functions for enabling staker withdrawals makes use of `recordStakeUpdate` function in (Slasher.sol)[https://github.com/Layr-Labs/eigenlayer-contracts/blob/25515edeead416977e6b0bf59b63a74c88f7d9b2/src/contracts/core/Slasher.sol#L167C6-L167C6]. More details in (here)[https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/AVS-Guide.md#recording-stake-updates].
+All the following functions for enabling staker withdrawals makes use of `recordStakeUpdate` function in [Slasher.sol](https://github.com/Layr-Labs/eigenlayer-contracts/blob/25515edeead416977e6b0bf59b63a74c88f7d9b2/src/contracts/core/Slasher.sol#L167C6-L167C6). More details in [here](https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/AVS-Guide.md#recording-stake-updates).
 
 
 #### staker-queue-withdrawal
+This function is used for enabling stakers to queue their withdrawal request with EigenLayer. This calls on the function `queueWithdrawal` in [strategyManager.sol](https://github.com/Layr-Labs/eigenlayer-contracts/blob/25515edeead416977e6b0bf59b63a74c88f7d9b2/src/contracts/core/StrategyManager.sol#L337) to make this withdrawal request.
 
 
-
+#### staker-notify-service-about-withdrawal
+This function would update the record of active queued withdrawal requests with additional information acquired from staker notifying the AVS that the staker intends to withdraw from EigenLayer. 
 
 #### advanceChainBy100Blocks
 
