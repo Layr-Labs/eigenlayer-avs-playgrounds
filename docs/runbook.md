@@ -96,11 +96,9 @@ TODO(soubhik): let's discuss and add details here. Can this call ever fail with 
 
 ### [Recording Stake Updates](https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/AVS-Guide.md#recording-stake-updates)
 
-#### staker-queue-withdrawal
+#### staker-mint-tokens
+For a staker to be able to participate in EigenLayer, the staker needs to first have tokens from whitelisted ERC20 contracts. Calling `staker-mint-tokens` function enables the staker to call the whitelisted [ERC20Mock.sol](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/src/test/mocks/ERC20Mock.sol) to mint some tokens to itself.  
 
-
-
-#### staker-notify-service-about-withdrawal
 
 #### advanceChainBy100Blocks
 
