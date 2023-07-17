@@ -50,7 +50,7 @@ We have whitelisted a strategy associated with the [ERC20Mock.sol](https://githu
 
 
 #### 4. staker-delegate-to-operators
-This last step is simply delegating all of the previously deposited assets to a chosen operator. Given that we have 1:1 matching between stakers and operators, the necessary information on which staker delegate their stake to which operator is obtained from [playground_avs_input.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/playground_avs_input.json). Note that one cannot delegate some assets to some operator and other assets to some other operator. Delegation is a binary status to a single operator.
+This last step is to simply delegate all of the previously deposited assets to a chosen operator. Given that we have 1:1 matching between stakers and operators, the necessary information on which staker delegate their stake to which operator is obtained from [playground_avs_input.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/playground_avs_input.json). Note that one cannot delegate some assets to some operator and other assets to some other operator. Delegation is a binary status to a single operator.
 
 
 
@@ -106,16 +106,31 @@ This command calls
 
 #### 3.5 [deregister-operators-with-avs](https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/AVS-Guide.md#deregistering-from-avs)
 
+
+
 TODO(soubhik): let's discuss and add details here. Can this call ever fail with our simpler service manager?
 
-### [Recording Stake Updates](https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/AVS-Guide.md#recording-stake-updates)
+### Staker withdrawal from EigenLayer
+This section explains how the scripts can be used for stakers to withdraw from EigenLayer. The file (withdrawal_request.json)[https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/withdrawal_request.json] specifies the withdrawal requests. The format of this file is:
 
-#### staker-mint-tokens
+``` json
+{
+  "numOfStakersToBeWithdrawn": 3,
+  "indicesOfStakersToBeWithdrawn": [
+    0,
+    2,
+    4
+  ]
+}
+```
+Here, `indicesOfStakersToBeWithdrawn` is the list of indices of stakers in `stakerPrivateKeys`
+in `playground_avs_input.json` file which you want to withdraw from EigenLayer. `numOfStakersToBeWithdrawn` is the number of these stakers that are being withdrawn. Note that they must match otherwise, you will get the error
+``` solidity
+  "Withdrawal_request.json error: Please ensure numOfStakersToBeWithdrawn is same as the length of indicesOfStakersToBeWithdrawn"
+```
 
+#### staker-queue-withdrawal
 
-
-#### staker-deposit-into-strategies
-Calling this function will 
 
 
 #### advanceChainBy100Blocks
