@@ -16,6 +16,7 @@ In this version of playground, we are making the following assumptions:
 - There is only one ERC20Mock token is whitelisted in the StrategyManager, so if you need to use another ERC20 token for your AVS (for example if you want to start testing dual or multi quorums), you will need to be added to the alphaMultisig and whitelist that token yourself, or ask us to do it for you. 
 - Once the playground has started, the assumption is that if you want to restake any new staker, you can only append its private key to the field `stakerPrivateKeys` in [playground_avs_input.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/playground_avs_input.json). Even if a staker has withdrawn from EigenLayer, you shouldn't remove its private key from the array in the field `stakerPrivateKeys`. The indices of stakers that you have to specify in the field `indicesOfStakersToBeWithdrawn` in [withdrawal_request.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/withdrawal_request.json) for withdrawing from EigenLayer depends upon the placement of the staker's private key in the field `stakerPrivateKeys` in [playground_avs_input.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/playground_avs_input.json).
 - Whenever `queueWithdrawalFromEigenLayer` is called, the staker withdraws every shares from every strategy.
+- In the example ServiceManager contract [PlaygroundAVSServiceManagerV1](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/src/core/PlaygroundAVSServiceManagerV1.sol), we have set `TASK_DURATION_BLOCKS = 0` and `BLOCK_STALE_MEASURE = 0`. This implies that a staker would be able to complete its withdrawal right after it has notified the AVS.
 
 
 ### Contracts Deployment
@@ -142,9 +143,10 @@ This function is used for enabling stakers to queue their withdrawal request wit
 This function would notify the AVS about the intention of all stakers who have queued withdrawal requests by calling `staker-queue-withdrawal`. This will update the record of active queued withdrawal requests with additional information, namely  the fields `isServiceNotifiedYet` and `middlewareTimesIndexForWithdrawal`, in the file [modified_queue_withdrawal_output.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/output/5/modified_queue_withdrawal_output.json). 
 
 #### advanceChainBy100Blocks
-This function advances the Anvil chain by 100 blocks.
+This function advances the Anvil chain by 100 blocks so that when the call to complete queued withdrawals is made, they are successful.
 
 #### staker-complete-queued-withdrawal
+This function would complete the queued withdrawal for the staker. In order to do so, the script accesses [modified_queue_withdrawal_output.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/output/5/modified_queue_withdrawal_output.json) to construct a `QueuedWithdrawal` data structure and `middlewareTimesIndex` for passing as an argument while calling `completeQueuedWithdrawal` in [completeQueuedWithdrawal](https://github.com/Layr-Labs/eigenlayer-contracts/blob/ac143c1b772f3cacad7353024b408e6f168ece69/src/contracts/core/StrategyManager.sol#L450). 
 
 
 
