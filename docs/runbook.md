@@ -135,15 +135,18 @@ All the following functions for enabling staker withdrawals makes use of `record
 
 
 #### staker-queue-withdrawal
-This function is used for enabling stakers to queue their withdrawal request with EigenLayer. This calls on the function `queueWithdrawal` in [strategyManager.sol](https://github.com/Layr-Labs/eigenlayer-contracts/blob/25515edeead416977e6b0bf59b63a74c88f7d9b2/src/contracts/core/StrategyManager.sol#L337) to make this withdrawal request.
+This function is used for enabling stakers to queue their withdrawal request with EigenLayer. This calls on the function `queueWithdrawal` in [strategyManager.sol](https://github.com/Layr-Labs/eigenlayer-contracts/blob/25515edeead416977e6b0bf59b63a74c88f7d9b2/src/contracts/core/StrategyManager.sol#L337) to make this withdrawal request. The information acquired from queueing withdrawal requests are stored in the file [modified_queue_withdrawal_output.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/output/5/modified_queue_withdrawal_output.json). 
 
 
 #### staker-notify-service-about-withdrawal
-This function would update the record of active queued withdrawal requests with additional information acquired from staker notifying the AVS that the staker intends to withdraw from EigenLayer. 
+This function would notify the AVS about the intention of all stakers who have queued withdrawal requests by calling `staker-queue-withdrawal`. This will update the record of active queued withdrawal requests with additional information, namely  the fields `isServiceNotifiedYet` and `middlewareTimesIndexForWithdrawal`, in the file [modified_queue_withdrawal_output.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/output/5/modified_queue_withdrawal_output.json). 
 
 #### advanceChainBy100Blocks
+This function advances the Anvil chain by 100 blocks.
 
 #### staker-complete-queued-withdrawal
+
+
 
 ### [Slashing](https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/AVS-Guide.md#slashing)
 
