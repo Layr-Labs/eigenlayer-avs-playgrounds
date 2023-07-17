@@ -535,7 +535,7 @@ contract PlaygroundAVSConfigParser is Script, Test, Utils {
         );
         address tokenStrat = stdJson.readAddress(
             eigenlayerDeploymentOutput,
-            ".addresses.baseStrategy"
+            ".addresses.ERC20MockStrategy"
         );
         Contracts memory contracts = getContractsFromServiceManager(
             playgroundAVSStrategyManagerV1,

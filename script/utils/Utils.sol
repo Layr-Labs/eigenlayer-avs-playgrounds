@@ -1,23 +1,25 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.12;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@eigenlayer/contracts/interfaces/IRegistryCoordinator.sol";
 import "@eigenlayer/contracts/strategies/StrategyBase.sol";
+import "../../src/test/mocks/ERC20Mock.sol";
 
 import "forge-std/Script.sol";
 import "forge-std/StdJson.sol";
 
 contract Utils is Script {
-    function _allocate(
+    // Note that this fct will only work for the ERC20Mock that has a public mint function
+    function _mintTokens(
         address strategyAddress,
         address[] memory tos,
         uint256[] memory amounts
     ) internal {
         for (uint256 i = 0; i < tos.length; i++) {
-            IERC20 underlyingToken = StrategyBase(strategyAddress)
-                .underlyingToken();
-            underlyingToken.transferFrom(address(0x01), tos[i], amounts[i]);
+            ERC20Mock underlyingToken = ERC20Mock(
+                address(StrategyBase(strategyAddress).underlyingToken())
+            );
+            underlyingToken.mint(tos[i], amounts[i]);
         }
     }
 

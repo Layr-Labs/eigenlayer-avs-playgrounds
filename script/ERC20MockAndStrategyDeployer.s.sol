@@ -22,8 +22,6 @@ import "@eigenlayer/contracts/pods/DelayedWithdrawalRouter.sol";
 import "@eigenlayer/contracts/permissions/PauserRegistry.sol";
 import "@eigenlayer/contracts/middleware/BLSPublicKeyCompendium.sol";
 
-import "../src/test/mocks/ERC20Mock.sol";
-
 import "@eigenlayer/test/mocks/EmptyContract.sol";
 import "@eigenlayer/test/mocks/ETHDepositMock.sol";
 
@@ -36,16 +34,16 @@ import "./utils/Utils.sol";
 // source .env
 
 // # To deploy and verify our contract
-// forge script script/EigenLayerDeploy.s.sol --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
-contract EigenLayerDeploy is Script, Test, Utils {
+// forge script script/ERC20MockAndStrategyDeployer.s.sol --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -v
+contract ERC20MockAndStrategyDeployer is Script, Test, Utils {
     Vm cheats = Vm(HEVM_ADDRESS);
 
     // EigenLayer Contracts
     ProxyAdmin public eigenLayerProxyAdmin;
     PauserRegistry public eigenLayerPauserReg;
     StrategyManager public strategyManager;
-    StrategyBase public baseStrategy;
-    StrategyBase public baseStrategyImplementation;
+    StrategyBase public ERC20MockStrategy;
+    StrategyBase public ERC20MockStrategyImplementation;
 
     function run() external {
         // read and log the chainID
@@ -70,12 +68,12 @@ contract EigenLayerDeploy is Script, Test, Utils {
         IERC20 mockToken = new ERC20Mock();
 
         // deploy StrategyBaseTVLLimits contract implementation
-        baseStrategyImplementation = new StrategyBase(strategyManager);
+        ERC20MockStrategyImplementation = new StrategyBase(strategyManager);
 
-        baseStrategy = StrategyBase(
+        ERC20MockStrategy = StrategyBase(
             address(
                 new TransparentUpgradeableProxy(
-                    address(baseStrategyImplementation),
+                    address(ERC20MockStrategyImplementation),
                     address(eigenLayerProxyAdmin),
                     abi.encodeWithSelector(
                         StrategyBase.initialize.selector,
@@ -90,7 +88,7 @@ contract EigenLayerDeploy is Script, Test, Utils {
         vm.stopBroadcast();
 
         emit log_named_address("ERC20Mock", address(mockToken));
-        emit log_named_address("mockTokenStrategy", address(baseStrategy));
-        emit log_named_address("mockTokenStrategyImplementation", address(baseStrategyImplementation));
+        emit log_named_address("mockTokenStrategy", address(ERC20MockStrategy));
+        emit log_named_address("mockTokenStrategyImplementation", address(ERC20MockStrategyImplementation));
     }
 }

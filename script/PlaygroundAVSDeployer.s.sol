@@ -57,7 +57,7 @@ contract PlaygroundAVSDeployer is Script, Utils {
             stdJson.readAddress(configData, ".addresses.slasher")
         );
         IStrategy strat = IStrategy(
-            stdJson.readAddress(configData, ".addresses.baseStrategy")
+            stdJson.readAddress(configData, ".addresses.ERC20MockStrategy")
         );
 
         address playgroundAVSCommunityMultisig = msg.sender;

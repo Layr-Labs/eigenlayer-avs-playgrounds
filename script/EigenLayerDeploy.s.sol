@@ -22,8 +22,6 @@ import "@eigenlayer/contracts/pods/DelayedWithdrawalRouter.sol";
 import "@eigenlayer/contracts/permissions/PauserRegistry.sol";
 import "@eigenlayer/contracts/middleware/BLSPublicKeyCompendium.sol";
 
-import "@eigenlayer/test/mocks/ERC20Mock.sol";
-
 import "@eigenlayer/test/mocks/EmptyContract.sol";
 import "@eigenlayer/test/mocks/ETHDepositMock.sol";
 
@@ -63,8 +61,8 @@ contract EigenLayerDeploy is Script, Test, Utils {
     DelayedWithdrawalRouter public delayedWithdrawalRouterImplementation;
     UpgradeableBeacon public eigenPodBeacon;
     EigenPod public eigenPodImplementation;
-    StrategyBase public baseStrategy;
-    StrategyBase public baseStrategyImplementation;
+    StrategyBase public ERC20MockStrategy;
+    StrategyBase public ERC20MockStrategyImplementation;
 
     EmptyContract public emptyContract;
 
@@ -327,17 +325,17 @@ contract EigenLayerDeploy is Script, Test, Utils {
 
         IERC20 mockToken = new ERC20Mock();
 
-        // baseStrategy = StrategyBase(
+        // ERC20MockStrategy = StrategyBase(
         //     address(new TransparentUpgradeableProxy(address(emptyContract), address(eigenLayerProxyAdmin), ""))
         // );
 
         // deploy StrategyBaseTVLLimits contract implementation
-        baseStrategyImplementation = new StrategyBase(strategyManager);
+        ERC20MockStrategyImplementation = new StrategyBase(strategyManager);
         // create upgradeable proxies that each point to the implementation and initialize them
 
         // eigenLayerProxyAdmin.upgradeAndCall(
-        //     TransparentUpgradeableProxy(payable(address(baseStrategy))),
-        //     address(baseStrategyImplementation),
+        //     TransparentUpgradeableProxy(payable(address(ERC20MockStrategy))),
+        //     address(ERC20MockStrategyImplementation),
         //     abi.encodeWithSelector(
         //         EigenPodManager.initialize.selector,
         //         EIGENPOD_MANAGER_MAX_PODS,
@@ -348,10 +346,10 @@ contract EigenLayerDeploy is Script, Test, Utils {
         //     )
         // );
 
-        baseStrategy = StrategyBase(
+        ERC20MockStrategy = StrategyBase(
             address(
                 new TransparentUpgradeableProxy(
-                    address(baseStrategyImplementation),
+                    address(ERC20MockStrategyImplementation),
                     address(eigenLayerProxyAdmin),
                     abi.encodeWithSelector(
                         StrategyBase.initialize.selector,
@@ -460,13 +458,13 @@ contract EigenLayerDeploy is Script, Test, Utils {
         );
         vm.serializeAddress(
             deployed_addresses,
-            "baseStrategy",
-            address(baseStrategy)
+            "ERC20MockStrategy",
+            address(ERC20MockStrategy)
         );
         vm.serializeAddress(
             deployed_addresses,
-            "baseStrategyImplementation",
-            address(baseStrategyImplementation)
+            "ERC20MockStrategyImplementation",
+            address(ERC20MockStrategyImplementation)
         );
         vm.serializeAddress(
             deployed_addresses,
@@ -613,8 +611,8 @@ contract EigenLayerDeploy is Script, Test, Utils {
 
         require(
             eigenLayerProxyAdmin.getProxyImplementation(
-                TransparentUpgradeableProxy(payable(address(baseStrategy)))
-            ) == address(baseStrategyImplementation),
+                TransparentUpgradeableProxy(payable(address(ERC20MockStrategy)))
+            ) == address(ERC20MockStrategyImplementation),
             "strategy: implementation set incorrectly"
         );
 
@@ -689,11 +687,11 @@ contract EigenLayerDeploy is Script, Test, Utils {
         );
 
         require(
-            baseStrategy.pauserRegistry() == eigenLayerPauserReg,
+            ERC20MockStrategy.pauserRegistry() == eigenLayerPauserReg,
             "StrategyBaseTVLLimits: pauser registry not set correctly"
         );
         require(
-            baseStrategy.paused() == 0,
+            ERC20MockStrategy.paused() == 0,
             "StrategyBaseTVLLimits: init paused status set incorrectly"
         );
 
@@ -760,8 +758,8 @@ contract EigenLayerDeploy is Script, Test, Utils {
         );
 
         require(
-            baseStrategyImplementation.strategyManager() == strategyManager,
-            "baseStrategyImplementation: strategyManager set incorrectly"
+            ERC20MockStrategyImplementation.strategyManager() == strategyManager,
+            "ERC20MockStrategyImplementation: strategyManager set incorrectly"
         );
 
         require(
