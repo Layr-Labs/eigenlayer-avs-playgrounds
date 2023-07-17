@@ -10,11 +10,10 @@ All of the below commands read from [script/output/5/eigenlayer_deployment_outpu
 
 
 
-### Assumptions of Playground
+### Assumptions made in Playground
 In this version of playground, we are making the following assumptions:
 - There is an 1:1 mapping between stakers and operators. That is, each operator can have only 1 staker delegating their ERC20 token to them.
 - There is only one ERC20Mock token is whitelisted in the StrategyManager, so if you need to use another ERC20 token for your AVS (for example if you want to start testing dual or multi quorums), you will need to be added to the alphaMultisig and whitelist that token yourself, or ask us to do it for you. 
-- 
 
 
 ### Contracts Deployment
@@ -42,17 +41,18 @@ operator is opted in to eigenlayer: true
 ```
 
 #### 2. staker-mint-tokens
-For a staker to be able to participate in EigenLayer, the staker needs to first have tokens from whitelisted ERC20 contracts. This `staker-mint-tokens` function calls the whitelisted [ERC20Mock.sol](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/src/test/mocks/ERC20Mock.sol) to mint some tokens to every staker whose private keys is mentioned in the field `stakerPrivateKeys` in [playground_avs_input.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/playground_avs_input.json). Note that currently only this ERC20Mock token is whitelisted in the StrategyManager, so if you need to use another ERC20 token for your AVS (for example if you want to start testing dual or multi quorums), you will need to be added to the alphaMultisig and whitelist that token yourself, or ask us to do it for you.
+For a staker to be able to participate in EigenLayer, the staker needs to first have tokens from whitelisted ERC20 contracts. This `staker-mint-tokens` function calls the whitelisted [ERC20Mock.sol](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/src/test/mocks/ERC20Mock.sol) to mint some tokens to every staker whose private keys is mentioned in the field `stakerPrivateKeys` in [playground_avs_input.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/playground_avs_input.json). 
 
 
-...
+
 #### 3. staker-deposit-into-strategies
-
+We have whitelisted a strategy associated with the [ERC20Mock.sol](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/src/test/mocks/ERC20Mock.sol) in the [StrategyManager.sol](https://github.com/Layr-Labs/eigenlayer-contracts/blob/2882f3e07c84c7093c21cc87025da34a771fd5e8/src/contracts/core/StrategyManager.sol). Using `staker-deposit-into-strategies`, all stakers deposit their ERC20 tokens with the whitelisted strategy. 
 
 
 #### 4. staker-delegate-to-operators
+This last step is simply delegating all of the previously deposited assets to a chosen operator. Given that we have 1:1 matching between stakers and operators, the necessary information on which staker delegate their stake to which operator is obtained from [playground_avs_input.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/playground_avs_input.json). Note that one cannot delegate some assets to some operator and other assets to some other operator. Delegation is a binary status to a single operator.
 
-This last step is simply delegating all of the previously deposited assets to a chosen operator. Note that one cannot delegate some assets to some operator and other assets to some other operator. Delegation is a binary status to a single operator.
+
 
 ### [Opting into (aka registering with) AVS](https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/AVS-Guide.md#opting-into-avs)
 
