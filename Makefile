@@ -14,9 +14,11 @@ endif
 setup: ## Deploy avs, setup stakers, delegation to operators, register with eigenlayer and avs
 	./setup.sh
 
-# TODO(missing functionality):
+# TODO(samlaf):
 # 1. as an AVS, I want to get the % stake that has signed off on a message (from stake registry.. maybe wait for credible squaring)
 # 2. integrate with some CLI wallet (clef? metamask snap? etc)
+# TODO(soubhik): why is latestServeUntilBlock: 0 after registering
+
 -----------------------------: ## 
 ___CONTRACTS_DEPLOYMENT___: ## 
 deploy-eigenlayer: ## Deploy eigenlayer
@@ -28,16 +30,6 @@ deploy-avs: ## Deploy avs
 -----------------------------: ## 
 OPERATOR_INTERACTIONS: ## Below commands read from script/input/5/playground_avs_input.json
 
-
-
-# TODO(soubhik): why is latestServeUntilBlock: 0 after registering
-
-# TODO: AVS only cares about the slashingWindowBlocks paramater in the avs registries
-#       make the withdrawal functions presented only from the point of view (how long can I, as an AVS, still slash the previous stake for?)
-#       also put emphasis on updateStakes in StakeRegistry.sol (in case they might want to call this)
-
-# TODO: mention quorums, at least a very basic understanding
-#       just to prepare them for future versions of this
 
 ### Low level functions (run these if you want to understand what's going on):
 fill-operator-keys-info:

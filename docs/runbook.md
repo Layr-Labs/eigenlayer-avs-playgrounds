@@ -111,7 +111,7 @@ operator is opted in to playgroundAVS (aka can be slashed): true
 
 #### 3. register-operators-with-avs
 
-TODO(samlaf): add details about registries contracts (should we just link to Gautham's google docs?)
+To understand the general structure of the registry contracts and how they interact with the service manager and eigenlayer contracts, read the [AVS Smart Contracts Template Architecture](https://docs.google.com/document/d/1b_a5Xx5DugM_lWPOdv-vJ3wQnT20IwZ8e8RL6TtlgoM/edit?usp=sharing) doc. This command will register the operator with the registry coordinator, as well as all low-level registries.
 
 After running this command, you should be able to run [print-operators-status](#print-operators-status) and see the operator's status as REGISTERED into the AVS:
 
