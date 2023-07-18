@@ -118,7 +118,6 @@ After running this command, you should be able to run [print-operators-status](#
 ```
 operator status in AVS registry: REGISTERED
     operatorId: 0x4b7b8243d970ff1c90a7c775c008baad825893ec6e806dfa5d3663dc093ed17f
-    operator fromTaskNumber: 0
     middlewareTimesLen (# of stake updates): 1
     stalestUpdateBlock: 9362065
     latestServeUntilBlock: 0
@@ -187,7 +186,6 @@ operator is opted in to eigenlayer: true
 operator is opted in to playgroundAVS (aka can be slashed): true
 operator status in AVS registry: REGISTERED
     operatorId: 0xfa513ae8a064e0fb50959c41249533404c2a7f8090ed79f0a44c85c9c418808c
-    operator fromTaskNumber: 0
     middlewareTimesLen (# of stake updates): 2
     stalestUpdateBlock: 9361912
     latestServeUntilBlock: 9361912

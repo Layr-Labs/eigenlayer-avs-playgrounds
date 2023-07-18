@@ -265,10 +265,6 @@ contract Operators is Script, PlaygroundAVSConfigParser {
             "   operatorId",
             operatorFromRegistry.operatorId
         );
-        emit log_named_uint(
-            "   operator fromTaskNumber",
-            operatorFromRegistry.fromTaskNumber
-        );
         uint32 middlewareTimesLen = uint32(
             contracts.eigenlayer.slasher.middlewareTimesLength(operatorAddr)
         );
