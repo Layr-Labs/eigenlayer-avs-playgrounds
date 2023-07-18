@@ -26,6 +26,11 @@ import "forge-std/StdJson.sol";
 // # To deploy and verify our contract
 // forge script script/PlaygroundAVSDeployer.s.sol:PlaygroundAVSDeployer --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast -vvvv
 contract PlaygroundAVSDeployer is Script, Utils {
+
+    // DEPLOYMENT CONSTANTS
+    uint32 public constant BLOCK_STALE_MEASURE = 0;
+    uint32 public constant TASK_DURATION_BLOCKS = 0;
+
     // PlaygroundAVS contracts
     ProxyAdmin public playgroundAVSProxyAdmin;
     PauserRegistry public playgroundAVSPauserReg;
@@ -253,7 +258,9 @@ contract PlaygroundAVSDeployer is Script, Utils {
             registryCoordinator,
             strategyManager,
             delegationManager,
-            slasher
+            slasher,
+            BLOCK_STALE_MEASURE,
+            TASK_DURATION_BLOCKS
         );
 
         // Third, upgrade the proxy contracts to use the correct implementation contracts and initialize them.
@@ -263,7 +270,7 @@ contract PlaygroundAVSDeployer is Script, Utils {
             ),
             address(PlaygroundAVSServiceManagerV1Implementation),
             abi.encodeWithSelector(
-                PlaygroundAVSServiceManagerV1.initialize.selector,
+                playgroundAVSServiceManagerV1.initialize.selector,
                 playgroundAVSPauserReg,
                 playgroundAVSCommunityMultisig,
                 0,

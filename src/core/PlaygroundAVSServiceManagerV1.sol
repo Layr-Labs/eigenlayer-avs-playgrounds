@@ -1,12 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
-import "@openzeppelin-upgrades/contracts/access/OwnableUpgradeable.sol";
-
-import "@eigenlayer/contracts/middleware/BLSSignatureChecker.sol";
-
 import "@eigenlayer/contracts/interfaces/IDelegationManager.sol";
 import "@eigenlayer/contracts/interfaces/IDelegationTerms.sol";
 import "@eigenlayer/contracts/interfaces/IPaymentManager.sol";
@@ -16,8 +10,11 @@ import "@eigenlayer/contracts/libraries/BytesLib.sol";
 import "@eigenlayer/contracts/libraries/Merkle.sol";
 import "@eigenlayer/contracts/permissions/Pausable.sol";
 
-import "./PlaygroundAVSServiceManagerV1Storage.sol";
+import "../interfaces/IPlaygroundAVSServiceManagerV1.sol";
+import "./ServiceManagerBase.sol";
 
+// TODO: write this as base contract, and have PlaygroundAVSServiceManagerV1 inherit from it
+// so that avs teams don't need to read all the other proxy calls
 /**
  * @title Primary entrypoint for procuring services from PlaygroundAVSServiceManagerV1.
  * @author Layr Labs, Inc.
@@ -27,66 +24,34 @@ import "./PlaygroundAVSServiceManagerV1Storage.sol";
  * - freezing operators as the result of various "challenges"
  */
 contract PlaygroundAVSServiceManagerV1 is
-    IServiceManager,
-    Initializable,
-    OwnableUpgradeable,
-    PlaygroundAVSServiceManagerV1Storage,
-    BLSSignatureChecker,
-    Pausable
+    ServiceManagerBase,
+    IPlaygroundAVSServiceManagerV1
 {
     using BytesLib for bytes;
 
-    uint8 internal constant _PAUSED_CONFIRM_BATCH = 0;
-
-    /**
-     * @notice EigenLayer contracts
-     */
-    IDelegationManager public immutable delegationManager;
-    IStrategyManager public immutable strategyManager;
-    ISlasher public immutable slasher;
-
-    /// @notice when applied to a function, ensures that the function is only callable by the `registryCoordinator`.
-    modifier onlyRegistryCoordinator() {
-        require(
-            msg.sender == address(registryCoordinator),
-            "onlyRegistryCoordinator: not from registry coordinator"
-        );
-        _;
-    }
-
-    /// @notice when applied to a function, ensures that the function is only callable by the `registryCoordinator`.
-    /// or by StakeRegistry
-    modifier onlyRegistryCoordinatorOrStakeRegistry() {
-        require(
-            (msg.sender == address(registryCoordinator)) || 
-            (msg.sender == address(IBLSRegistryCoordinatorWithIndices(address(registryCoordinator)).stakeRegistry())),
-            "onlyRegistryCoordinatorOrStakeRegistry: not from registry coordinator or stake registry"
-        );
-        _;
-    }
+    /// @notice The current task number
+    uint32 public taskNum;
 
     constructor(
         IBLSRegistryCoordinatorWithIndices _registryCoordinator,
         IStrategyManager _strategyManager,
         IDelegationManager _delegationMananger,
-        ISlasher _slasher
-    ) BLSSignatureChecker(_registryCoordinator) {
-        strategyManager = _strategyManager;
-        delegationManager = _delegationMananger;
-        slasher = _slasher;
-        _disableInitializers();
-    }
-
-    function initialize(
-        IPauserRegistry _pauserRegistry,
-        address initialOwner
-    ) public initializer {
-        _initializePauser(_pauserRegistry, UNPAUSE_ALL);
-        _transferOwnership(initialOwner);
-    }
+        ISlasher _slasher,
+        uint32 _blockStaleMeasure,
+        uint32 _taskDurationBlocks
+    )
+        ServiceManagerBase(
+            _registryCoordinator,
+            _strategyManager,
+            _delegationMananger,
+            _slasher,
+            _blockStaleMeasure,
+            _taskDurationBlocks
+        )
+    {}
 
     /// @notice Called in the event of challenge resolution, in order to forward a call to the Slasher, which 'freezes' the `operator`.
-    function freezeOperator(address operatorAddr) external {
+    function freezeOperator(address operatorAddr) external override {
         // require(
         //     msg.sender == address(???),
         //     "PlaygroundAVSServiceManagerV1.freezeOperator: Only ??? can slash operators"
@@ -94,73 +59,9 @@ contract PlaygroundAVSServiceManagerV1 is
         slasher.freezeOperator(operatorAddr);
     }
 
-    /**
-     * @notice Called by the Registry in the event of a new registration, to forward a call to the Slasher
-     * @param operator The operator whose stake is being updated
-     * @param serveUntilBlock The block until which the stake accounted for in the first update is slashable by this middleware
-     */
-    function recordFirstStakeUpdate(
-        address operator,
-        uint32 serveUntilBlock
-    ) external onlyRegistryCoordinator {
-        slasher.recordFirstStakeUpdate(operator, serveUntilBlock);
-    }
-
-    /**
-     * @notice Called by the registryCoordinator, in order to forward a call to the Slasher, informing it of a stake update
-     * @param operator The operator whose stake is being updated
-     * @param updateBlock The block at which the update is being made
-     * @param serveUntilBlock The block until which the stake withdrawn from the operator in this update is slashable by this middleware
-     * @param prevElement The value of the previous element in the linked list of stake updates (generated offchain)
-     */
-    function recordStakeUpdate(
-        address operator,
-        uint32 updateBlock,
-        uint32 serveUntilBlock,
-        uint256 prevElement
-    ) external onlyRegistryCoordinatorOrStakeRegistry {
-        slasher.recordStakeUpdate(
-            operator,
-            updateBlock,
-            serveUntilBlock,
-            prevElement
-        );
-    }
-
-    /**
-     * @notice Called by the registryCoordinator in the event of deregistration, to forward a call to the Slasher
-     * @param operator The operator being deregistered
-     * @param serveUntilBlock The block until which the stake delegated to the operator is slashable by this middleware
-     */
-    function recordLastStakeUpdateAndRevokeSlashingAbility(
-        address operator,
-        uint32 serveUntilBlock
-    ) external onlyRegistryCoordinator {
-        slasher.recordLastStakeUpdateAndRevokeSlashingAbility(
-            operator,
-            serveUntilBlock
-        );
-    }
-
     // VIEW FUNCTIONS
     function taskNumber() external view returns (uint32) {
         return taskNum;
-    }
-
-    /// @notice Returns the block until which operators must serve.
-    function latestServeUntilBlock() external view returns (uint32) {
-        return
-            uint32(block.number) + TASK_DURATION_BLOCKS + BLOCK_STALE_MEASURE;
-    }
-
-    /// @dev need to override function here since its defined in both these contracts
-    function owner()
-        public
-        view
-        override(OwnableUpgradeable, IServiceManager)
-        returns (address)
-    {
-        return OwnableUpgradeable.owner();
     }
 
     function createDummyTask() external {
