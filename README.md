@@ -10,6 +10,10 @@ git clone --recursive git@github.com:Layr-Labs/eigenlayer-AVS-playgrounds.git
 
 Make sure to clone with the `--recursive` flag to get the submodules (eigenlayer contracts and forge-test dependencies).
 
+## Dependencies
+
+You will need to [install foundry](https://book.getfoundry.sh/getting-started/installation). Also make sure to run `foundryup` to be on the latest version.
+
 ## Eigenlayer contracts
 
 We have deployed a parallel set of contracts on goerli, with all functionality unpaused, for middleware teams to test with. The contract addresses can be found [here](./script/output/5/eigenlayer_deployment_output.json).
@@ -51,6 +55,9 @@ At any point, to know the status of your operators and stakers, run the STATUS_P
 
 ```
 make print-operators-status
+```
+and
+```
 make print-stakers-status
 ```
 
