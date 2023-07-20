@@ -21,7 +21,8 @@ setup: ## Deploy avs, setup stakers, delegation to operators, register with eige
 
 -----------------------------: ## 
 ___CONTRACTS_DEPLOYMENT___: ## 
-deploy-eigenlayer: ## Deploy eigenlayer
+## Deploy eigenlayer. Not needed when forking goerli
+deploy-eigenlayer:
 	forge script script/EigenLayerDeploy.s.sol --rpc-url ${RPC_URL}  --private-key ${PRIVATE_KEY} --etherscan-api-key ${ETHERSCAN_API_KEY} --verify --broadcast -v
 
 deploy-avs: ## Deploy avs
