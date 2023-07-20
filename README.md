@@ -5,7 +5,7 @@ This repo contains a barebones AVS setup that can be used as a starting example 
 ## Installation
 
 ```
-git clone --recursive git@github.com:Layr-Labs/eigenlayer-AVS-playgrounds.git
+git clone --recursive git@github.com:Layr-Labs/eigenlayer-avs-playgrounds.git
 ```
 
 Make sure to clone with the `--recursive` flag to get the submodules (eigenlayer contracts and forge-test dependencies).
