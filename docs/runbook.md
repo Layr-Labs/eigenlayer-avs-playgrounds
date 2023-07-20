@@ -3,7 +3,7 @@
 ## Introduction
 This is meant as a programmatic follow-along guide to the [AVS Guide](https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/AVS-Guide.md) and the [AVS Smart Contract Architecture](https://docs.google.com/document/d/1EIs9CUaqcPCAYc5UGMRbu6y0BJP7FEY9eja_5lkg0aY/edit). The natgen generated [api docs](https://github.com/Layr-Labs/eigenlayer-contracts/tree/master/docs/docgen/core) for the core contracts will also be helpful, as will the contracts + actors architecture diagram. As a part of the alpha-playground program, our team has deployed a canonical set of contracts representing the EigeLayer protocol on the Goerli Testnet. Our recommendation is that AVS teams use these contracts to conduct any simulations they would like. Below we have added guidance on how to interact with these contracts in a local environment (forked from Goerli) using the Foundry toolkit.
 
-<!-- <img src="../images/contracts-diagram.png" style="width: 80%"/> -->
+<img src="../images/contracts-diagram.png" style="width: 80%"/>
 
 ### Scope of the alpha-playground
 The scope of the playground are:
