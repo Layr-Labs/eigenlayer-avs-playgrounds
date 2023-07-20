@@ -1,24 +1,25 @@
 # AVS Runbook - alpha-playground
 
+## Introduction
 This is meant as a programmatic follow-along guide to the [AVS Guide](https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/AVS-Guide.md) and the [AVS Smart Contract Architecture](https://docs.google.com/document/d/1EIs9CUaqcPCAYc5UGMRbu6y0BJP7FEY9eja_5lkg0aY/edit). The natgen generated [api docs](https://github.com/Layr-Labs/eigenlayer-contracts/tree/master/docs/docgen/core) for the core contracts will also be helpful, as will the contracts + actors architecture diagram. As a part of the alpha-playground program, our team has deployed a canonical set of contracts representing the EigeLayer protocol on the Goerli Testnet. Our recommendation is that AVS teams use these contracts to conduct any simulations they would like. Below we have added guidance on how to interact with these contracts in a local environment (forked from Goerli) using the Foundry toolkit.
 
 <!-- <img src="../images/contracts-diagram.png" style="width: 80%"/> -->
 
-## Scope of the alpha-playground
+### Scope of the alpha-playground
 The scope of the playground are:
 - As an operator, you can register with EigenLayer.
 - As a staker, you can mint some ERC20Mock tokens, deposit into the corresponding strategy and delegate them to an operator.
 - As an operator, you can opt into a simple AVS which has a registry contract and a service manager contract. There is no task or node software in this simple AVS.
 - As a staker you can withdraw from the AVS and EigenLayer. 
 
-## Makefile commands and their related contract interactions
+## Commands and their related contract interactions
 
 All of the below commands read from [script/output/5/eigenlayer_deployment_output.json](../script/output/5/eigenlayer_deployment_output.json) and (after deploying the avs contracts) [script/output/5/playground_avs_deployment_output.json](../script/output/5/playground_avs_deployment_output.json). Note that the `5` refers to the chainid, goerli.
 
 
 
 ### Assumptions made in Playground scripts and json inputs
-In this version of playground, we are making the following assumptions:
+Before we delve deeper into the playground, we state the assumptions made in the playground scripts and json inputs:
 - There is an 1:1 mapping between stakers and operators. That is, each operator can have only 1 staker delegating their ERC20 token to them.
 - There is only one ERC20Mock token is whitelisted in the StrategyManager, so if you need to use another ERC20 token for your AVS (for example if you want to start testing dual or multi quorums), you will need to be added to the alphaMultisig and whitelist that token yourself, or ask us to do it for you. 
 - Once the playground has started, the assumption is that if you want to restake any new staker, you can only append its private key to the field `stakerPrivateKeys` in [playground_avs_input.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/playground_avs_input.json). Even if a staker has withdrawn from EigenLayer, you shouldn't remove its private key from the array in the field `stakerPrivateKeys`. The indices of stakers that you have to specify in the field `indicesOfStakersToBeWithdrawn` in [withdrawal_request.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/withdrawal_request.json) for withdrawing from EigenLayer depends upon the placement of the staker's private key in the field `stakerPrivateKeys` in [playground_avs_input.json](https://github.com/Layr-Labs/eigenlayer-AVS-playgrounds/blob/alpha/script/input/5/playground_avs_input.json).
