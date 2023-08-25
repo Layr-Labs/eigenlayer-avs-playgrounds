@@ -45,7 +45,9 @@ At any point run `make` to get info on the different possible commands.
 
 ## Operator and staker interactions
 
-Now feel free to play with any of the other make commands, learn from the errors, ask us questions, etc.
+
+
+To register operators with EigenLayer, we use the following command: 
 
 ```
 make register-operators-with-eigenlayer
