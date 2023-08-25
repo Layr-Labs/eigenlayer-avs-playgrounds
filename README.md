@@ -1,6 +1,14 @@
 # Eigenlayer AVS playgrounds
 
-This repo contains a barebones AVS setup that can be used as a starting example for AVSs to test their integrations with eigenlayer and learn about our contracts' APIs. The makefile CLI can also be used as a V0
+The purpose of this AVS playground is:
+- learn how, as an AVS developer, can get your AVS contracts to interact with the interfaces that are provided by EigenLayer, 
+- learn how you can do e2e testing for your AVS contracts,
+- learn about registry contracts and understand how you can incorporate/use into your AVS contracts.
+
+Before you delve further in AVS playground, it is essential that you have already thought deeply about the logic for your AVS contracts, namely, task submission and storage logic, slashing logic and you are about to start implementing them in solidity. At that stage, you will find the AVS playground very useful. 
+
+Another important point about AVS playground is that operators are not running any off-chain node software. For AVS playground, we just deployed registry contracts.
+
 
 ## Installation
 
@@ -48,10 +56,20 @@ At any point run `make` to get info on the different possible commands.
 
 
 To register operators with EigenLayer, we use the following command: 
-
 ```
 make register-operators-with-eigenlayer
 ```
+
+To register operators with dummy registry contracts, we use the following command:
+```
+make register-operators-with-eigenlayer
+```
+
+For the staker to delegate to the operator, we use the following command:
+```
+make staker-delegate-to-operators:
+```
+
 
 At any point, to know the status of your operators and stakers, run the STATUS_PRINTERS functions
 
@@ -63,6 +81,7 @@ and
 make print-stakers-status
 ```
 
+The playground also supports stakers to queue withdrawal request for eithdrawing from EigenLayer and then complete their withdrawals.
 For a lot more detail and explanation of each command in detail, look at the [runbook](./docs/runbook.md).
 
 ## Playbooks
