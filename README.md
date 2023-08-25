@@ -5,7 +5,7 @@ The purpose of this AVS playground is:
 - learn how you can do e2e testing for your AVS contracts,
 - learn about registry contracts and understand how you can incorporate/use into your AVS contracts.
 
-Before you delve further in AVS playground, it is essential that you have already thought deeply about the logic for your AVS contracts, namely, task submission and storage logic, slashing logic and you are about to start implementing them in solidity. At that stage, you will find the AVS playground very useful. 
+Before you delve further in AVS playground, it is essential that you are thinking deeply about the logic for your AVS contracts, namely, task submission and storage logic, slashing logic, registry contracts or you are implementing them. At either stage, you will find the AVS playground very useful. 
 
 Another important point about AVS playground is that operators are not running any off-chain node software. For AVS playground, we just deployed registry contracts.
 
