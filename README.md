@@ -62,7 +62,7 @@ make register-operators-with-eigenlayer
 
 To register operators with dummy registry contracts, we use the following command:
 ```
-make register-operators-with-eigenlayer
+make register-operators-with-avs
 ```
 
 For the staker to delegate to the operator, we use the following command:
