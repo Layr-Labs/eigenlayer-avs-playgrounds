@@ -1,3 +1,5 @@
+**OUTDATED**: Please check out our [incredible-squaring-avs](https://github.com/Layr-Labs/incredible-squaring-avs) repo for the most up-to-date avs demo with offchain code integration.
+
 # Eigenlayer AVS playgrounds
 
 The purpose of this AVS playground is:
